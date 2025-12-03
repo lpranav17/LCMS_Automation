@@ -14,93 +14,487 @@ import re
 # Page configuration
 st.set_page_config(
     page_title="MS Batch Generator",
-    page_icon="🧪",
+    page_icon="⚗️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for a clean, modern look
+# Professional CSS with modern lab/scientific aesthetic
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+    /* Import distinctive fonts */
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
     
+    /* Root variables for theming */
+    :root {
+        --primary: #0ea5e9;
+        --primary-dark: #0284c7;
+        --primary-light: #38bdf8;
+        --accent: #06b6d4;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --surface: #f8fafc;
+        --surface-elevated: #ffffff;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #94a3b8;
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+    }
+    
+    /* Global styles */
     html, body, [class*="css"] {
-        font-family: 'IBM Plex Sans', sans-serif;
+        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     
+    .stApp {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    /* Hide default Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: var(--border-light);
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: var(--text-muted);
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+    }
+    
+    /* Main header with gradient accent */
     .main-header {
-        font-size: 2.2rem;
-        font-weight: 600;
-        color: #1a365d;
-        margin-bottom: 0.5rem;
-        border-bottom: 3px solid #3182ce;
-        padding-bottom: 0.5rem;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.025em;
     }
     
+    .main-header-accent {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #14b8a6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.03em;
+    }
+    
+    .subtitle {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        font-weight: 400;
+    }
+    
+    /* Section cards */
+    .section-card {
+        background: var(--surface-elevated);
+        border-radius: 16px;
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+        transition: all 0.2s ease;
+    }
+    
+    .section-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Section headers */
     .section-header {
-        font-size: 1.3rem;
-        font-weight: 500;
-        color: #2c5282;
-        margin-top: 1.5rem;
-        margin-bottom: 1rem;
-        padding: 0.5rem;
-        background: linear-gradient(90deg, #ebf8ff 0%, transparent 100%);
-        border-left: 4px solid #3182ce;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--border-light);
     }
     
-    .step-indicator {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .section-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+    
+    .icon-blue { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); }
+    .icon-green { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); }
+    .icon-amber { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); }
+    .icon-purple { background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); }
+    .icon-cyan { background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%); }
+    
+    /* Progress stepper */
+    .stepper-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem 0;
+    }
+    
+    .step-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 0.875rem;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+        font-size: 0.875rem;
+    }
+    
+    .step-item.completed {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        color: #047857;
+    }
+    
+    .step-item.active {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        color: #1d4ed8;
+        font-weight: 600;
+    }
+    
+    .step-item.pending {
+        color: var(--text-muted);
+    }
+    
+    .step-number {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .step-item.completed .step-number {
+        background: #10b981;
         color: white;
-        padding: 0.3rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
+    }
+    
+    .step-item.active .step-number {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .step-item.pending .step-number {
+        background: var(--border);
+        color: var(--text-muted);
+    }
+    
+    /* Alert boxes */
+    .alert {
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        margin: 1rem 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .alert-icon {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        margin-top: 0.1rem;
+    }
+    
+    .alert-warning {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        border: 1px solid #fcd34d;
+        color: #92400e;
+    }
+    
+    .alert-info {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 1px solid #93c5fd;
+        color: #1e40af;
+    }
+    
+    .alert-success {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        border: 1px solid #6ee7b7;
+        color: #065f46;
+    }
+    
+    .alert-error {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border: 1px solid #fca5a5;
+        color: #991b1b;
+    }
+    
+    /* Metric cards */
+    .metric-card {
+        background: var(--surface-elevated);
+        border-radius: 12px;
+        padding: 1.25rem;
+        border: 1px solid var(--border);
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary);
+        font-family: 'JetBrains Mono', monospace;
+        line-height: 1.2;
+    }
+    
+    .metric-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 0.25rem;
         font-weight: 500;
-        display: inline-block;
-        margin-bottom: 0.5rem;
     }
     
-    .warning-box {
-        background-color: #fffaf0;
-        border: 1px solid #ed8936;
-        border-left: 4px solid #ed8936;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
+    /* Toggle switches styling */
+    .toggle-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
     }
     
-    .info-box {
-        background-color: #ebf8ff;
-        border: 1px solid #3182ce;
-        border-left: 4px solid #3182ce;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
+    .toggle-item {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
     }
     
-    .success-box {
-        background-color: #f0fff4;
-        border: 1px solid #38a169;
-        border-left: 4px solid #38a169;
-        padding: 1rem;
-        border-radius: 0.5rem;
+    .toggle-item.active {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-color: var(--primary-light);
+        color: var(--primary-dark);
     }
     
-    div[data-testid="stExpander"] {
-        border: 1px solid #e2e8f0;
-        border-radius: 0.5rem;
-    }
-    
+    /* Buttons */
     .stButton > button {
-        border-radius: 0.5rem;
-        font-weight: 500;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 0.625rem 1.25rem;
+        transition: all 0.2s ease;
+        border: none;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+        color: white;
     }
     
     .stDownloadButton > button {
-        background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: white;
         border: none;
-        border-radius: 0.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .stDownloadButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+    
+    /* Input fields */
+    .stTextInput > div > div > input,
+    .stNumberInput > div > div > input,
+    .stSelectbox > div > div {
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        font-family: 'DM Sans', sans-serif;
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stNumberInput > div > div > input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    }
+    
+    /* Expander styling */
+    div[data-testid="stExpander"] {
+        background: var(--surface-elevated);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    div[data-testid="stExpander"] > div:first-child {
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Data editor */
+    .stDataFrame {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+    
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        border-right: 1px solid var(--border);
+    }
+    
+    section[data-testid="stSidebar"] > div {
+        padding-top: 1.5rem;
+    }
+    
+    /* Sidebar header */
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0 1rem 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 1rem;
+    }
+    
+    .sidebar-logo {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+    
+    .sidebar-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+    
+    .sidebar-subtitle {
+        font-size: 0.75rem;
+        color: var(--text-muted);
         font-weight: 500;
+    }
+    
+    /* Template section */
+    .template-section {
+        background: var(--surface);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .template-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Code blocks */
+    .code-preview {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Footer */
+    .footer {
+        text-align: center;
+        padding: 2rem 0 1rem 0;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        border-top: 1px solid var(--border);
+        margin-top: 2rem;
+    }
+    
+    .footer a {
+        color: var(--primary);
+        text-decoration: none;
+    }
+    
+    /* Instrument badges */
+    .instrument-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .badge-sciex { background: #fef3c7; color: #92400e; }
+    .badge-agilent { background: #dbeafe; color: #1e40af; }
+    .badge-hfx { background: #ede9fe; color: #5b21b6; }
+    
+    /* Navigation buttons */
+    .nav-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-light);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .main-header-accent {
+            font-size: 1.5rem;
+        }
+        .section-card {
+            padding: 1.25rem;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -212,101 +606,121 @@ def generate_sequence(sample_types):
             for i in range(config.get('count', 0)):
                 sequence.append({'type': stype, 'index': i + 1})
     
-    # Add remaining standards at start if rule is "At the start only"
-    if standards.get('enabled') and standards.get('rule') == 'At the start only':
-        # Already added above
-        pass
-    
     return sequence
 
-def autofill_name_pattern(existing_names):
-    """Try to detect naming pattern from existing names"""
-    if len(existing_names) < 2:
-        return None
-    
-    # Try to find numeric suffix pattern
-    pattern = r'^(.+?)(\d+)$'
-    matches = [re.match(pattern, name) for name in existing_names if name]
-    
-    if all(matches) and matches:
-        prefix = matches[0].group(1)
-        last_num = max(int(m.group(2)) for m in matches if m)
-        return f"{prefix}{last_num + 1}"
-    
-    return None
-
-# Sidebar - Template Management & Navigation
+# Sidebar
 with st.sidebar:
-    st.markdown('<div class="main-header">🧪 MS Batch Gen</div>', unsafe_allow_html=True)
+    # Sidebar header
+    st.markdown("""
+        <div class="sidebar-header">
+            <div class="sidebar-logo">⚗️</div>
+            <div>
+                <div class="sidebar-title">MS Batch Gen</div>
+                <div class="sidebar-subtitle">Worklist Generator</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
     
-    st.markdown("---")
-    
-    # Progress indicator
-    steps = ['Setup', 'Sample Config', 'Naming', 'Instrument', 'Preview']
+    # Progress stepper
+    steps = [
+        ('Initial Setup', '1'),
+        ('Sample Config', '2'),
+        ('Naming Rules', '3'),
+        ('Instrument', '4'),
+        ('Export', '5')
+    ]
     current_step = st.session_state.step
     
-    for i, step_name in enumerate(steps, 1):
+    st.markdown('<div class="stepper-container">', unsafe_allow_html=True)
+    for i, (step_name, step_num) in enumerate(steps, 1):
         if i < current_step:
-            st.markdown(f"✅ **Step {i}:** {step_name}")
+            status = "completed"
+            icon = "✓"
         elif i == current_step:
-            st.markdown(f"🔵 **Step {i}:** {step_name}")
+            status = "active"
+            icon = step_num
         else:
-            st.markdown(f"⚪ Step {i}: {step_name}")
+            status = "pending"
+            icon = step_num
+        
+        st.markdown(f"""
+            <div class="step-item {status}">
+                <div class="step-number">{icon}</div>
+                <span>{step_name}</span>
+            </div>
+        """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     
     # Template Management
-    st.markdown("### 📁 Templates")
+    st.markdown('<div class="template-title">📁 Saved Templates</div>', unsafe_allow_html=True)
     
     templates = load_templates()
     
     if templates:
         selected_template = st.selectbox(
-            "Load Template",
+            "Select Template",
             options=[''] + list(templates.keys()),
-            key='template_select'
+            key='template_select',
+            label_visibility="collapsed"
         )
         
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Load", disabled=not selected_template):
+            if st.button("Load", disabled=not selected_template, use_container_width=True):
                 if selected_template:
                     config = templates[selected_template]
                     st.session_state.sample_types = config.get('sample_types', st.session_state.sample_types)
                     st.session_state.naming_mode = config.get('naming_mode', 'None')
                     st.rerun()
         with col2:
-            if st.button("Delete", disabled=not selected_template):
+            if st.button("Delete", disabled=not selected_template, use_container_width=True):
                 if selected_template:
                     delete_template(selected_template)
                     st.rerun()
+    else:
+        st.markdown("""
+            <div style="color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem 0;">
+                No templates saved yet
+            </div>
+        """, unsafe_allow_html=True)
     
     # Save current config as template
-    with st.expander("Save as Template"):
-        template_name = st.text_input("Template Name", key='new_template_name')
-        if st.button("Save Template", disabled=not template_name):
+    with st.expander("💾 Save New Template"):
+        template_name = st.text_input("Template Name", key='new_template_name', placeholder="My Template")
+        if st.button("Save Template", disabled=not template_name, use_container_width=True):
             config = {
                 'sample_types': st.session_state.sample_types,
                 'naming_mode': st.session_state.naming_mode,
             }
             save_template(template_name, config)
-            st.success(f"Saved '{template_name}'!")
+            st.success(f"✓ Saved '{template_name}'")
             st.rerun()
     
     st.markdown("---")
     
     # Clear all button
-    if st.button("🗑️ Clear All", use_container_width=True):
+    if st.button("🗑️ Reset All", use_container_width=True, type="secondary"):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.rerun()
 
 # Main content area
-st.markdown('<div class="main-header">Instrument Batch/Worklist Generator</div>', unsafe_allow_html=True)
+st.markdown("""
+    <div class="main-header-accent">Mass Spectrometry Batch Generator</div>
+    <div class="subtitle">Generate CSV batch files for Sciex7500, AgilentQQQ, and HFX-2 instruments</div>
+""", unsafe_allow_html=True)
 
 # Step 1: Initial Setup
 if st.session_state.step >= 1:
-    st.markdown('<div class="section-header">📋 Step 1: Initial Setup</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("""
+        <div class="section-header">
+            <div class="section-icon icon-blue">📋</div>
+            <span>Step 1: Initial Setup</span>
+        </div>
+    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
@@ -320,7 +734,7 @@ if st.session_state.step >= 1:
         st.session_state.instrument = instrument if instrument else None
         
         project_name = st.text_input(
-            "Project Name (Worklist/Batch File Name)",
+            "Project Name",
             value=st.session_state.project_name,
             placeholder="e.g., MPG_25-12_GaIEMA",
             help="Format: 2-3 letter initials_YY-MM_ProjectCode"
@@ -328,66 +742,85 @@ if st.session_state.step >= 1:
         st.session_state.project_name = project_name
         
         if project_name and not validate_project_name(project_name):
-            st.warning("⚠️ Project name doesn't match recommended format (e.g., MPG_25-12_GaIEMA)")
+            st.markdown("""
+                <div class="alert alert-warning">
+                    <span class="alert-icon">⚠️</span>
+                    <span>Project name doesn't match recommended format (e.g., MPG_25-12_GaIEMA)</span>
+                </div>
+            """, unsafe_allow_html=True)
     
     with col2:
         parent_folder = st.text_input(
-            "Parent Folder Path",
+            "Data Folder Path",
             value=st.session_state.parent_folder,
             placeholder="D:\\Data\\Project_Folder",
-            help="Path where all data files and CSV batch file will be saved"
+            help="Path where all data files will be saved"
         )
         st.session_state.parent_folder = parent_folder
         
         if parent_folder:
             if st.session_state.instrument == 'AgilentQQQ' and not parent_folder.upper().startswith('D:'):
-                st.warning("⚠️ AgilentQQQ requires folder path on D: drive")
+                st.markdown("""
+                    <div class="alert alert-warning">
+                        <span class="alert-icon">⚠️</span>
+                        <span>AgilentQQQ requires folder path on D: drive</span>
+                    </div>
+                """, unsafe_allow_html=True)
     
     # Navigation
     if st.session_state.instrument and project_name:
-        if st.button("Next: Sample Configuration →", key='next_1'):
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Continue to Sample Configuration →", key='next_1', type="primary"):
             st.session_state.step = max(st.session_state.step, 2)
             st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Step 2: Sample Types Configuration
 if st.session_state.step >= 2:
-    st.markdown('<div class="section-header">🧫 Step 2: Sample Types & Frequency Rules</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("""
+        <div class="section-header">
+            <div class="section-icon icon-green">🧫</div>
+            <span>Step 2: Sample Types & Frequency Rules</span>
+        </div>
+    """, unsafe_allow_html=True)
     
     # Sample type toggles
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.session_state.sample_types['standards']['enabled'] = st.toggle(
-            "Standards",
+            "📊 Standards",
             value=st.session_state.sample_types['standards']['enabled']
         )
     with col2:
         st.session_state.sample_types['samples']['enabled'] = st.toggle(
-            "Samples",
+            "🧪 Samples",
             value=st.session_state.sample_types['samples']['enabled']
         )
     with col3:
         st.session_state.sample_types['qc']['enabled'] = st.toggle(
-            "Quality Controls (QCs)",
+            "✓ Quality Controls",
             value=st.session_state.sample_types['qc']['enabled']
         )
     with col4:
         st.session_state.sample_types['blanks']['enabled'] = st.toggle(
-            "Blanks",
+            "○ Blanks",
             value=st.session_state.sample_types['blanks']['enabled']
         )
     
     # Warning if no QC or blanks
     if not st.session_state.sample_types['qc']['enabled'] and not st.session_state.sample_types['blanks']['enabled']:
         st.markdown("""
-        <div class="warning-box">
-            ⚠️ <strong>Warning:</strong> No QC or Blank samples selected. 
-            Consider adding these for quality assurance.
-        </div>
+            <div class="alert alert-warning">
+                <span class="alert-icon">💡</span>
+                <span><strong>Recommendation:</strong> Consider adding QC or Blank samples for quality assurance.</span>
+            </div>
         """, unsafe_allow_html=True)
     
-    # Configuration table for active sample types
-    st.markdown("#### Configuration Table")
+    # Configuration for active sample types
+    st.markdown("<br>", unsafe_allow_html=True)
     
     frequency_rules = ['At the start only', 'At the end only', 'At fixed interval']
     
@@ -395,12 +828,12 @@ if st.session_state.step >= 2:
     
     if active_types:
         for type_name, config in active_types:
-            with st.expander(f"📌 {type_name.title()}", expanded=True):
+            with st.expander(f"⚙️ Configure {type_name.title()}", expanded=True):
                 cols = st.columns([2, 2, 2])
                 
                 with cols[0]:
                     count = st.number_input(
-                        f"Count",
+                        f"Number of {type_name}",
                         min_value=0,
                         max_value=500,
                         value=config['count'],
@@ -411,14 +844,18 @@ if st.session_state.step >= 2:
                 with cols[1]:
                     if type_name != 'samples':
                         rule = st.selectbox(
-                            f"Frequency Rule",
+                            f"Placement Rule",
                             options=frequency_rules,
                             index=frequency_rules.index(config['rule']) if config['rule'] in frequency_rules else 0,
                             key=f"rule_{type_name}"
                         )
                         st.session_state.sample_types[type_name]['rule'] = rule
                     else:
-                        st.info("Samples form the main sequence")
+                        st.markdown("""
+                            <div class="alert alert-info" style="margin: 0; padding: 0.75rem;">
+                                <span>Samples form the main sequence</span>
+                            </div>
+                        """, unsafe_allow_html=True)
                 
                 with cols[2]:
                     if type_name != 'samples' and st.session_state.sample_types[type_name].get('rule') == 'At fixed interval':
@@ -435,30 +872,43 @@ if st.session_state.step >= 2:
     if any(config['enabled'] and config['count'] > 0 for config in st.session_state.sample_types.values()):
         sequence = generate_sequence(st.session_state.sample_types)
         
-        st.markdown("#### 📊 Sequence Preview")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("#### 📊 Sequence Summary")
+        
         summary = {}
         for item in sequence:
             summary[item['type']] = summary.get(item['type'], 0) + 1
         
         cols = st.columns(len(summary) + 1)
-        cols[0].metric("Total Injections", len(sequence))
+        with cols[0]:
+            st.metric("Total Injections", len(sequence))
         for i, (stype, count) in enumerate(summary.items(), 1):
-            cols[i].metric(stype, count)
+            with cols[i]:
+                st.metric(stype, count)
     
+    # Navigation
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("← Back to Setup", key='back_2'):
+        if st.button("← Back", key='back_2'):
             st.session_state.step = 1
             st.rerun()
     with col2:
         if any(config['enabled'] and config['count'] > 0 for config in st.session_state.sample_types.values()):
-            if st.button("Next: Naming Rules →", key='next_2'):
+            if st.button("Continue to Naming →", key='next_2', type="primary"):
                 st.session_state.step = max(st.session_state.step, 3)
                 st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Step 3: Sample Naming Rules
 if st.session_state.step >= 3:
-    st.markdown('<div class="section-header">✏️ Step 3: Sample Naming Rules</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("""
+        <div class="section-header">
+            <div class="section-icon icon-amber">✏️</div>
+            <span>Step 3: Sample Naming Rules</span>
+        </div>
+    """, unsafe_allow_html=True)
     
     naming_modes = ['None', 'Auto-build (Prefix + Index + Suffix)', 'Enter each name manually', 'Import from CSV/Excel']
     
@@ -471,14 +921,15 @@ if st.session_state.step >= 3:
     
     if naming_mode == 'Auto-build (Prefix + Index + Suffix)':
         st.markdown("""
-        <div class="info-box">
-            💡 <strong>Auto-build:</strong> Names are generated as <code>Prefix_Index_Suffix</code> (e.g., Matrix_dil_5)
-        </div>
+            <div class="alert alert-info">
+                <span class="alert-icon">💡</span>
+                <span>Names are generated as <code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.4rem; border-radius: 4px;">Prefix_Index_Suffix</code> (e.g., Matrix_1_dil)</span>
+            </div>
         """, unsafe_allow_html=True)
         
         # Column order selection
         col_order = st.multiselect(
-            "Column Order (drag to reorder)",
+            "Name Component Order",
             options=['Prefix', 'Index', 'Suffix'],
             default=['Prefix', 'Index', 'Suffix'],
             help="Reorder how name parts are combined"
@@ -510,14 +961,14 @@ if st.session_state.step >= 3:
                             "Suffix (optional)",
                             value="",
                             key=f"suffix_{type_name}",
-                            placeholder="e.g., uM, 5"
+                            placeholder="e.g., uM, dil"
                         )
                     
                     # Preview
                     if prefix:
                         parts = {'Prefix': prefix, 'Index': str(index_start), 'Suffix': suffix}
                         sample_name = '_'.join([parts[c] for c in col_order if parts.get(c)])
-                        st.code(f"Example: {sample_name}")
+                        st.markdown(f'<div class="code-preview">Preview: {sample_name}</div>', unsafe_allow_html=True)
     
     elif naming_mode == 'Import from CSV/Excel':
         uploaded_file = st.file_uploader(
@@ -533,8 +984,8 @@ if st.session_state.step >= 3:
                 else:
                     df = pd.read_excel(uploaded_file)
                 
-                st.write("Preview of uploaded file:")
-                st.dataframe(df.head())
+                st.write("**Preview of uploaded file:**")
+                st.dataframe(df.head(), use_container_width=True)
                 
                 name_column = st.selectbox(
                     "Select column containing sample names",
@@ -543,30 +994,61 @@ if st.session_state.step >= 3:
                 
                 if name_column:
                     st.session_state.imported_names = df[name_column].tolist()
-                    st.success(f"Imported {len(st.session_state.imported_names)} sample names")
+                    st.markdown(f"""
+                        <div class="alert alert-success">
+                            <span class="alert-icon">✓</span>
+                            <span>Successfully imported {len(st.session_state.imported_names)} sample names</span>
+                        </div>
+                    """, unsafe_allow_html=True)
             except Exception as e:
-                st.error(f"Error reading file: {e}")
+                st.markdown(f"""
+                    <div class="alert alert-error">
+                        <span class="alert-icon">✕</span>
+                        <span>Error reading file: {e}</span>
+                    </div>
+                """, unsafe_allow_html=True)
     
     elif naming_mode == 'None':
         st.markdown("""
-        <div class="info-box">
-            📝 Samples will be automatically numbered: Sample1, Sample2, QC1, Blank1, etc.
-        </div>
+            <div class="alert alert-info">
+                <span class="alert-icon">📝</span>
+                <span>Samples will be automatically numbered: Sample1, Sample2, QC1, Blank1, etc.</span>
+            </div>
         """, unsafe_allow_html=True)
     
+    # Navigation
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("← Back to Sample Config", key='back_3'):
+        if st.button("← Back", key='back_3'):
             st.session_state.step = 2
             st.rerun()
     with col2:
-        if st.button("Next: Instrument Configuration →", key='next_3'):
+        if st.button("Continue to Instrument Config →", key='next_3', type="primary"):
             st.session_state.step = max(st.session_state.step, 4)
             st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Step 4: Instrument-Specific Configuration
 if st.session_state.step >= 4:
-    st.markdown(f'<div class="section-header">⚙️ Step 4: {st.session_state.instrument} Configuration</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    
+    # Instrument badge
+    badge_class = {
+        'Sciex7500': 'badge-sciex',
+        'AgilentQQQ': 'badge-agilent',
+        'HFX-2': 'badge-hfx'
+    }.get(st.session_state.instrument, 'badge-sciex')
+    
+    st.markdown(f"""
+        <div class="section-header">
+            <div class="section-icon icon-purple">⚙️</div>
+            <span>Step 4: Instrument Configuration</span>
+        </div>
+        <div class="instrument-badge {badge_class}">
+            🔬 {st.session_state.instrument}
+        </div>
+    """, unsafe_allow_html=True)
     
     # Generate base sequence
     sequence = generate_sequence(st.session_state.sample_types)
@@ -596,15 +1078,13 @@ if st.session_state.step >= 4:
     
     # SCIEX 7500 Configuration
     if st.session_state.instrument == 'Sciex7500':
-        st.markdown("### Sciex7500 Settings")
-        
         col1, col2 = st.columns(2)
         with col1:
             ms_method = st.text_input(
                 "MS Method Path",
                 value=st.session_state.ms_method,
                 placeholder="D:\\Methods\\method.dam",
-                help="Select MS method file from drive"
+                help="Select MS method file"
             )
             st.session_state.ms_method = ms_method
             
@@ -622,7 +1102,7 @@ if st.session_state.step >= 4:
                 "LC Method Path",
                 value=st.session_state.lc_method,
                 placeholder="D:\\Methods\\lc_method.lcm",
-                help="Select LC method file from drive"
+                help="Select LC method file"
             )
             st.session_state.lc_method = lc_method
             
@@ -643,10 +1123,8 @@ if st.session_state.step >= 4:
             st.session_state.injection_volume = injection_volume
         
         # Build the data table
-        st.markdown("### Sample Table")
-        st.markdown(f"*Max vials for selected plate: {max_vials}*")
+        st.markdown(f"<br>**Sample Table** — Max vials: {max_vials}", unsafe_allow_html=True)
         
-        # Create DataFrame
         data = []
         for i, item in enumerate(sequence):
             sample_name = generate_sample_name(item, st.session_state.naming_mode)
@@ -664,7 +1142,6 @@ if st.session_state.step >= 4:
         
         df = pd.DataFrame(data)
         
-        # Editable table
         edited_df = st.data_editor(
             df,
             num_rows="dynamic",
@@ -689,24 +1166,25 @@ if st.session_state.step >= 4:
     
     # Agilent QQQ Configuration
     elif st.session_state.instrument == 'AgilentQQQ':
-        st.markdown("### AgilentQQQ Settings")
-        
         col1, col2 = st.columns(2)
         with col1:
             ms_method = st.text_input(
                 "Instrument Method Path",
                 value=st.session_state.ms_method,
                 placeholder="D:\\Methods\\method.m",
-                help="MS method path (same for all samples)"
+                help="MS method path"
             )
             st.session_state.ms_method = ms_method
         
         with col2:
-            st.info("📁 Data Folder will use the parent folder path from Step 1")
+            st.markdown("""
+                <div class="alert alert-info" style="margin-top: 1.5rem;">
+                    <span class="alert-icon">📁</span>
+                    <span>Data Folder uses the path from Step 1</span>
+                </div>
+            """, unsafe_allow_html=True)
         
-        # Build the data table
-        st.markdown("### Sample Table")
-        st.markdown("*Sample Position format: P1-A1 to P1-H12*")
+        st.markdown("<br>**Sample Table** — Position format: P1-A1 to P1-H12", unsafe_allow_html=True)
         
         data = []
         for i, item in enumerate(sequence):
@@ -739,7 +1217,7 @@ if st.session_state.step >= 4:
             column_config={
                 "Sample Position": st.column_config.TextColumn(
                     "Sample Position",
-                    help="Format: P1-A1 (auto-corrects p1a1 to P1-A1)",
+                    help="Format: P1-A1",
                     max_chars=10
                 ),
                 "Sample Type": st.column_config.SelectboxColumn(
@@ -759,8 +1237,6 @@ if st.session_state.step >= 4:
     
     # HFX-2 Configuration
     elif st.session_state.instrument == 'HFX-2':
-        st.markdown("### HFX-2 Settings")
-        
         col1, col2 = st.columns(2)
         with col1:
             ms_method = st.text_input(
@@ -772,7 +1248,12 @@ if st.session_state.step >= 4:
             st.session_state.ms_method = ms_method
             
             if ms_method and not ms_method.endswith('.meth'):
-                st.warning("⚠️ Method file should have .meth extension")
+                st.markdown("""
+                    <div class="alert alert-warning">
+                        <span class="alert-icon">⚠️</span>
+                        <span>Method file should have .meth extension</span>
+                    </div>
+                """, unsafe_allow_html=True)
         
         with col2:
             injection_volume = st.number_input(
@@ -784,15 +1265,12 @@ if st.session_state.step >= 4:
             )
             st.session_state.injection_volume = injection_volume
         
-        # Build the data table
-        st.markdown("### Sample Table")
-        st.markdown("*Vial Position format: G:A1 to G:H12*")
+        st.markdown("<br>**Sample Table** — Position format: G:A1 to G:H12", unsafe_allow_html=True)
         
         data = []
         for i, item in enumerate(sequence):
             sample_name = generate_sample_name(item, st.session_state.naming_mode)
             
-            # Map sample types for HFX-2
             type_map = {
                 'Sample': 'Unknown',
                 'Standard': 'Std Bracket',
@@ -801,7 +1279,6 @@ if st.session_state.step >= 4:
             }
             sample_type = type_map.get(item['type'], 'Unknown')
             
-            # Level and Sample Weight are needed for certain types
             needs_level = sample_type in ['QC', 'Std Bracket', 'Std Clear', 'Std Update']
             
             data.append({
@@ -862,7 +1339,6 @@ if st.session_state.step >= 4:
     if st.session_state.sequence_df is not None:
         df = st.session_state.sequence_df
         
-        # Check for duplicate vial positions with different names
         if 'Vial Position' in df.columns:
             pos_col = 'Vial Position'
         elif 'Position' in df.columns:
@@ -875,39 +1351,50 @@ if st.session_state.step >= 4:
         if pos_col:
             name_col = 'Sample Name' if 'Sample Name' in df.columns else df.columns[0]
             
-            # Find duplicates
             pos_groups = df.groupby(pos_col)[name_col].apply(list)
             duplicates = pos_groups[pos_groups.apply(len) > 1]
             
             if len(duplicates) > 0 and not duplicates.index.isin(['']).all():
                 st.markdown("""
-                <div class="warning-box">
-                    ⚠️ <strong>Duplicate Position Warning:</strong> Multiple samples have the same vial/plate position!
-                </div>
+                    <div class="alert alert-error">
+                        <span class="alert-icon">⚠️</span>
+                        <span><strong>Duplicate Position Warning:</strong> Multiple samples share the same position!</span>
+                    </div>
                 """, unsafe_allow_html=True)
                 for pos, names in duplicates.items():
                     if pos and pos != '':
                         st.warning(f"Position {pos}: {', '.join(str(n) for n in names)}")
     
+    # Navigation
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("← Back to Naming Rules", key='back_4'):
+        if st.button("← Back", key='back_4'):
             st.session_state.step = 3
             st.rerun()
     with col2:
-        if st.button("Next: Preview & Export →", key='next_4'):
+        if st.button("Continue to Export →", key='next_4', type="primary"):
             st.session_state.step = max(st.session_state.step, 5)
             st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Step 5: Preview and Export
 if st.session_state.step >= 5:
-    st.markdown('<div class="section-header">📤 Step 5: Preview & Export</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("""
+        <div class="section-header">
+            <div class="section-icon icon-cyan">📤</div>
+            <span>Step 5: Preview & Export</span>
+        </div>
+    """, unsafe_allow_html=True)
     
     if st.session_state.sequence_df is not None:
         df = st.session_state.sequence_df
         
-        st.markdown("### Final Preview")
-        st.dataframe(df, use_container_width=True)
+        st.markdown("**Final Preview**")
+        st.dataframe(df, use_container_width=True, height=400)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
         
         # Export options
         col1, col2 = st.columns(2)
@@ -921,43 +1408,48 @@ if st.session_state.step >= 5:
                 value=f"{st.session_state.project_name}.csv" if st.session_state.project_name else "batch.csv"
             )
         
+        st.markdown("<br>", unsafe_allow_html=True)
+        
         # Generate CSV
         csv_data = df.to_csv(index=False, header=include_headers)
-        
-        st.download_button(
-            label="📥 Download CSV",
-            data=csv_data,
-            file_name=filename,
-            mime="text/csv",
-            use_container_width=True
-        )
-        
-        # Also offer with headers version
         csv_with_headers = df.to_csv(index=False, header=True)
-        st.download_button(
-            label="📥 Download CSV (with headers)",
-            data=csv_with_headers,
-            file_name=f"headers_{filename}",
-            mime="text/csv",
-            use_container_width=True
-        )
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                label="📥 Download CSV",
+                data=csv_data,
+                file_name=filename,
+                mime="text/csv",
+                use_container_width=True
+            )
+        
+        with col2:
+            st.download_button(
+                label="📥 Download CSV (with headers)",
+                data=csv_with_headers,
+                file_name=f"headers_{filename}",
+                mime="text/csv",
+                use_container_width=True
+            )
         
         st.markdown("""
-        <div class="success-box">
-            ✅ <strong>Ready to export!</strong> Click the download button to save your batch file.
-        </div>
+            <div class="alert alert-success">
+                <span class="alert-icon">✓</span>
+                <span><strong>Ready to export!</strong> Click a download button above to save your batch file.</span>
+            </div>
         """, unsafe_allow_html=True)
     
     if st.button("← Back to Configuration", key='back_5'):
         st.session_state.step = 4
         st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
-st.markdown("---")
-st.markdown(
-    "<div style='text-align: center; color: #718096; font-size: 0.85rem;'>"
-    "MS Batch Generator v1.0 | Built with Streamlit"
-    "</div>",
-    unsafe_allow_html=True
-)
-
+st.markdown("""
+    <div class="footer">
+        <strong>MS Batch Generator</strong> v1.0 · Built with Streamlit<br>
+        Supports Sciex7500 · AgilentQQQ · HFX-2
+    </div>
+""", unsafe_allow_html=True)
