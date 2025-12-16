@@ -11,7 +11,7 @@ from config import (
 )
 from utils import (
     load_templates, save_template, delete_template, reset_session_state,
-    validate_project_name, generate_sequence, generate_sample_name
+    generate_sequence, generate_sample_name
 )
 
 
@@ -133,14 +133,10 @@ def render_step1_initial_setup():
         project_name = st.text_input(
             "Project Name",
             value=st.session_state.project_name,
-            placeholder="e.g., MPG_25-12_GaIEMA"
+            placeholder="e.g., MPG_25-12_GaIEMA",
+            help="Suggested format: XX_YY-MM_Name (e.g., MPG_25-12_GaIEMA)"
         )
         st.session_state.project_name = project_name
-        
-        if project_name and not validate_project_name(project_name):
-            st.markdown('''<div class="alert alert-warning">⚠️ Project name doesn't match format.<br>
-            <strong>Required:</strong> XX_YY-MM_Name<br>
-            <strong>Example:</strong> MPG_25-12_GaIEMA (Initials_Year-Month_ProjectCode)</div>''', unsafe_allow_html=True)
     
     with col2:
         parent_folder = st.text_input(
@@ -175,6 +171,10 @@ def render_step2_sample_config():
         </div>
     """, unsafe_allow_html=True)
     
+    # Initialize order if not present
+    if 'sample_type_order' not in st.session_state:
+        st.session_state.sample_type_order = ['standards', 'samples', 'qc', 'blanks']
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -189,14 +189,59 @@ def render_step2_sample_config():
     if not st.session_state.sample_types['qc']['enabled'] and not st.session_state.sample_types['blanks']['enabled']:
         st.markdown('<div class="alert alert-warning">💡 Consider adding QC or Blanks for quality assurance</div>', unsafe_allow_html=True)
     
-    active_types = [(name, config) for name, config in st.session_state.sample_types.items() if config['enabled']]
+    # === SEQUENCE ORDER SECTION ===
+    st.markdown("---")
+    st.markdown("##### 🔀 Sequence Order")
+    st.markdown('<div style="font-size:0.85em;color:#666;margin-bottom:0.5rem;">Drag to reorder how sample types appear in the sequence</div>', unsafe_allow_html=True)
+    
+    type_icons = {'standards': '📊', 'samples': '🧪', 'qc': '✓', 'blanks': '○'}
+    type_labels = {'standards': 'Standards', 'samples': 'Samples', 'qc': 'QC', 'blanks': 'Blanks'}
+    
+    order_cols = st.columns([3, 1, 1, 3])
+    
+    with order_cols[0]:
+        for idx, type_key in enumerate(st.session_state.sample_type_order):
+            enabled = st.session_state.sample_types[type_key]['enabled']
+            icon = type_icons.get(type_key, '•')
+            label = type_labels.get(type_key, type_key.title())
+            style = "" if enabled else "opacity:0.4;"
+            st.markdown(f'<div style="padding:0.3rem 0.5rem;margin:2px 0;background:#f0f2f6;border-radius:4px;{style}">{idx+1}. {icon} {label}</div>', unsafe_allow_html=True)
+    
+    with order_cols[1]:
+        st.markdown('<div style="height:8px;"></div>', unsafe_allow_html=True)
+        for idx in range(len(st.session_state.sample_type_order)):
+            if st.button("⬆", key=f"up_{idx}", disabled=(idx == 0)):
+                order = st.session_state.sample_type_order
+                order[idx], order[idx-1] = order[idx-1], order[idx]
+                st.rerun()
+    
+    with order_cols[2]:
+        st.markdown('<div style="height:8px;"></div>', unsafe_allow_html=True)
+        for idx in range(len(st.session_state.sample_type_order)):
+            if st.button("⬇", key=f"down_{idx}", disabled=(idx == len(st.session_state.sample_type_order) - 1)):
+                order = st.session_state.sample_type_order
+                order[idx], order[idx+1] = order[idx+1], order[idx]
+                st.rerun()
+    
+    with order_cols[3]:
+        # Show current order preview
+        enabled_order = [type_labels[t] for t in st.session_state.sample_type_order if st.session_state.sample_types[t]['enabled']]
+        if enabled_order:
+            st.markdown(f'<div style="font-size:0.85em;color:#666;padding-top:0.5rem;">Order: {" → ".join(enabled_order)}</div>', unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Get active types in the specified order
+    active_types = [(name, st.session_state.sample_types[name]) for name in st.session_state.sample_type_order if st.session_state.sample_types[name]['enabled']]
     
     for type_name, config in active_types:
         with st.expander(f"⚙️ Configure {type_name.title()}", expanded=True):
             cols = st.columns([2, 2, 2])
             
             with cols[0]:
-                count = st.number_input(f"Number of {type_name}", min_value=0, max_value=500, value=config['count'], key=f"count_{type_name}")
+                current_rule = config.get('rule', '')
+                help_text = f"How many {type_name} at each occurrence" if current_rule in ['At fixed interval', 'At start + fixed interval'] else f"Total number of {type_name}"
+                count = st.number_input(f"Count per block", min_value=0, max_value=500, value=config['count'], key=f"count_{type_name}", help=help_text)
                 st.session_state.sample_types[type_name]['count'] = count
             
             with cols[1]:
@@ -207,12 +252,50 @@ def render_step2_sample_config():
                     st.markdown('<div class="alert alert-info" style="margin:0;padding:0.5rem;">Main sequence</div>', unsafe_allow_html=True)
             
             with cols[2]:
-                if type_name != 'samples' and st.session_state.sample_types[type_name].get('rule') == 'At fixed interval':
-                    interval = st.number_input("Every N samples", min_value=1, max_value=100, value=config.get('interval', 5), key=f"interval_{type_name}")
+                current_rule = st.session_state.sample_types[type_name].get('rule', '')
+                if type_name != 'samples' and current_rule in ['At fixed interval', 'At start + fixed interval']:
+                    interval = st.number_input(
+                        "Every N samples", 
+                        min_value=1, 
+                        max_value=100, 
+                        value=config.get('interval', 5), 
+                        key=f"interval_{type_name}",
+                        help=f"Places {count} {type_name} at start, then repeats after every N samples"
+                    )
                     st.session_state.sample_types[type_name]['interval'] = interval
+            
+            # Show example pattern for interval rules
+            if type_name != 'samples' and current_rule == 'At fixed interval' and count > 0:
+                interval_val = config.get('interval', 5)
+                example = f"Pattern: {type_name[0].upper()}1"
+                if count > 1:
+                    example += f"-{type_name[0].upper()}{count}"
+                example += f" → S1-S{interval_val} → {type_name[0].upper()}1"
+                if count > 1:
+                    example += f"-{type_name[0].upper()}{count}"
+                example += " → ..."
+                st.markdown(f'<div class="alert alert-info" style="margin:0;padding:0.5rem;font-size:0.85em;">{example}</div>', unsafe_allow_html=True)
+            
+            # Additional row for "At start + fixed interval" to set how many at start
+            if type_name != 'samples' and st.session_state.sample_types[type_name].get('rule') == 'At start + fixed interval':
+                st.markdown("---")
+                col_start = st.columns([2, 2, 2])
+                with col_start[0]:
+                    start_count = st.number_input(
+                        f"How many at start?", 
+                        min_value=1, 
+                        max_value=max(1, config.get('count', 2)), 
+                        value=config.get('start_count', config.get('count', 2)), 
+                        key=f"start_count_{type_name}",
+                        help="Number to place at the beginning of the sequence"
+                    )
+                    st.session_state.sample_types[type_name]['start_count'] = start_count
+                with col_start[1]:
+                    interval_val = config.get('interval', 5)
+                    st.markdown(f'<div class="alert alert-info" style="margin:0;padding:0.5rem;">Then {count} every {interval_val} samples</div>', unsafe_allow_html=True)
     
     if any(config['enabled'] and config['count'] > 0 for config in st.session_state.sample_types.values()):
-        sequence = generate_sequence(st.session_state.sample_types)
+        sequence = generate_sequence(st.session_state.sample_types, st.session_state.get('sample_type_order'))
         st.markdown("#### 📊 Sequence Summary")
         summary = {}
         for item in sequence:
@@ -323,7 +406,7 @@ def render_step4_instrument_config():
         <div class="instrument-badge {badge_class}">🔬 {st.session_state.instrument}</div>
     """, unsafe_allow_html=True)
     
-    sequence = generate_sequence(st.session_state.sample_types)
+    sequence = generate_sequence(st.session_state.sample_types, st.session_state.get('sample_type_order'))
     
     if st.session_state.instrument == 'Sciex7500':
         df = render_sciex7500_config(sequence)
@@ -452,7 +535,7 @@ def render_agilent_config(sequence):
 
 
 def render_hfx2_config(sequence):
-    """Render HFX-2 configuration."""
+    """Render HFX-2 configuration with full column format."""
     col1, col2 = st.columns(2)
     with col1:
         ms_method = st.text_input("Instrument Method (.meth)", value=st.session_state.ms_method, placeholder="D:\\Methods\\method.meth")
@@ -469,36 +552,72 @@ def render_hfx2_config(sequence):
         st.markdown('<div class="alert alert-warning">⚠️ No samples configured. Go back to Step 2 to add samples.</div>', unsafe_allow_html=True)
         return None
     
+    # HFX-2 full column format (matching instrument requirements)
     data = []
     for i, item in enumerate(sequence):
         sample_name = generate_sample_name(item, st.session_state.naming_mode, sequence)
         sample_type = {'Sample': 'Unknown', 'Standard': 'Std Bracket', 'QC': 'QC', 'Blank': 'Blank'}.get(item['type'], 'Unknown')
+        needs_level = sample_type in ['QC', 'Std Bracket', 'Std Update', 'Std Clear']
+        
         data.append({
             'Sample Type': sample_type,
             'File Name': f"{sample_name}.raw",
             'Sample ID': sample_name,
             'Path': st.session_state.parent_folder,
             'Instrument Method': ms_method,
+            'Process Method': '',
+            'Calibration File': '',
             'Position': '',
             'Inj Vol': injection_volume,
-            'Dil Factor': 1
+            'Level': 1 if needs_level else '',
+            'Sample Wt': '',
+            'Sample Vol': '',
+            'ISTD Amt': '',
+            'Dil Factor': 1,
+            'L1 Study': '',
+            'L2 Client': '',
+            'L3 Laboratory': '',
+            'L4 Company': '',
+            'L5 Phone': '',
+            'Comment': '',
+            'Sample Name': sample_name  # This column is important!
         })
     
     df = pd.DataFrame(data)
     
-    st.markdown('<div class="alert alert-info">💡 Double-click cells to edit • Fill Position (e.g., G:A1)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="alert alert-info">💡 Double-click cells to edit • Fill Position (e.g., G:A1) • All columns included for HFX-2 format</div>', unsafe_allow_html=True)
+    
+    # Only show essential columns in editor, but keep all in dataframe
+    display_columns = ['Sample Type', 'File Name', 'Sample ID', 'Path', 'Instrument Method', 'Position', 'Inj Vol', 'Dil Factor', 'Sample Name']
     
     edited_df = st.data_editor(
-        df, num_rows="dynamic", use_container_width=True, height=400, key='hfx_editor',
+        df[display_columns], num_rows="dynamic", use_container_width=True, height=400, key='hfx_editor',
         column_config={
             "Sample Type": st.column_config.SelectboxColumn("Sample Type", options=HFX_SAMPLE_TYPES, required=True),
             "Position": st.column_config.TextColumn("Position", help="Format: G:A1 to G:H12"),
             "Inj Vol": st.column_config.NumberColumn("Inj Vol", min_value=0.01, format="%.2f"),
-            "Dil Factor": st.column_config.NumberColumn("Dil Factor", min_value=1, default=1)
+            "Dil Factor": st.column_config.NumberColumn("Dil Factor", min_value=1, default=1),
+            "Sample Name": st.column_config.TextColumn("Sample Name", help="Sample name for reference")
         }
     )
-    st.session_state.sequence_df = edited_df
-    return edited_df
+    
+    # Merge edited columns back into full dataframe
+    for col in display_columns:
+        if col in edited_df.columns:
+            df[col] = edited_df[col].tolist() + [''] * (len(df) - len(edited_df)) if len(edited_df) < len(df) else edited_df[col].tolist()[:len(df)]
+    
+    # Handle added rows
+    if len(edited_df) > len(df):
+        for i in range(len(df), len(edited_df)):
+            new_row = {col: '' for col in df.columns}
+            for col in display_columns:
+                if col in edited_df.columns:
+                    new_row[col] = edited_df[col].iloc[i] if i < len(edited_df) else ''
+            new_row['Dil Factor'] = 1
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    
+    st.session_state.sequence_df = df
+    return df
 
 
 # ============================================================================

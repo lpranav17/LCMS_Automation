@@ -21,6 +21,7 @@ def init_session_state():
         'project_name': '',
         'parent_folder': '',
         'sample_types': DEFAULT_SAMPLE_TYPES.copy(),
+        'sample_type_order': ['standards', 'samples', 'qc', 'blanks'],  # Default order
         'naming_mode': 'None',
         'naming_config': {},
         'sequence_df': None,
@@ -91,52 +92,120 @@ def validate_project_name(name):
 # SEQUENCE GENERATION
 # ============================================================================
 
-def generate_sequence(sample_types):
-    """Generate the sample sequence based on frequency rules."""
+def generate_sequence(sample_types, type_order=None):
+    """
+    Generate the sample sequence based on frequency rules.
+    
+    Rules:
+    - At the start only: Place 'count' items at beginning only (e.g., QC1, QC2)
+    - At the end only: Place 'count' items at the end only
+    - At fixed interval: Place 'count' items at START, then repeat after every N samples
+      Example with count=2, interval=5: QC1, QC2, S1-S5, QC1, QC2, S6-S10, QC1, QC2...
+    - At start + fixed interval: Same with configurable start count
+    
+    For interval rules, 'count' = how many items at EACH occurrence (repeating with reset indices)
+    
+    Args:
+        sample_types: Dict of sample type configurations
+        type_order: List defining order of types (default: ['standards', 'samples', 'qc', 'blanks'])
+    """
     sequence = []
     
-    standards = sample_types.get('standards', {})
-    samples = sample_types.get('samples', {})
-    qc = sample_types.get('qc', {})
-    blanks = sample_types.get('blanks', {})
+    # Default order if not specified
+    if type_order is None:
+        type_order = ['standards', 'samples', 'qc', 'blanks']
     
-    # Start-only items
-    for stype, config in [('Standard', standards), ('Blank', blanks), ('QC', qc)]:
-        if config.get('enabled') and config.get('rule') == 'At the start only':
-            for i in range(config.get('count', 0)):
-                sequence.append({'type': stype, 'index': i + 1})
+    # Map type names to display names
+    type_display = {
+        'standards': 'Standard',
+        'samples': 'Sample', 
+        'qc': 'QC',
+        'blanks': 'Blank'
+    }
     
-    # Build main sequence with samples
-    if samples.get('enabled'):
-        sample_count = samples.get('count', 0)
-        blank_interval = blanks.get('interval', 0) if blanks.get('enabled') and blanks.get('rule') == 'At fixed interval' else 0
-        qc_interval = qc.get('interval', 0) if qc.get('enabled') and qc.get('rule') == 'At fixed interval' else 0
+    # Get all type configs
+    type_configs = {
+        'standards': sample_types.get('standards', {}),
+        'samples': sample_types.get('samples', {}),
+        'qc': sample_types.get('qc', {}),
+        'blanks': sample_types.get('blanks', {})
+    }
+    
+    def includes_interval(rule):
+        return rule in ['At fixed interval', 'At start + fixed interval']
+    
+    # Helper to add a repeating block (indices reset: 1, 2, 3... each time)
+    def add_block(stype, count, sequence):
+        for i in range(1, count + 1):
+            sequence.append({'type': stype, 'index': i})
+    
+    # Get interval settings for interval-based types
+    interval_types = {}  # type_key -> (interval, count)
+    for type_key in type_order:
+        config = type_configs.get(type_key, {})
+        if config.get('enabled') and includes_interval(config.get('rule', '')):
+            interval_types[type_key] = (config.get('interval', 0), config.get('count', 0))
+    
+    # === START ITEMS (in order) ===
+    for type_key in type_order:
+        config = type_configs.get(type_key, {})
+        display_name = type_display.get(type_key, type_key.title())
         
-        blank_counter = 0
-        qc_counter = 0
-        blank_placed = 0
-        qc_placed = 0
+        if not config.get('enabled'):
+            continue
+            
+        rule = config.get('rule', '')
         
-        for i in range(1, sample_count + 1):
-            if blank_interval > 0 and i > 1 and (i - 1) % blank_interval == 0:
-                if blanks.get('enabled') and blank_placed < blanks.get('count', 0):
-                    blank_counter += 1
-                    blank_placed += 1
-                    sequence.append({'type': 'Blank', 'index': blank_counter})
-            
-            if qc_interval > 0 and i > 1 and (i - 1) % qc_interval == 0:
-                if qc.get('enabled') and qc_placed < qc.get('count', 0):
-                    qc_counter += 1
-                    qc_placed += 1
-                    sequence.append({'type': 'QC', 'index': qc_counter})
-            
-            sequence.append({'type': 'Sample', 'index': i})
+        # "At the start only" - add full count at start
+        if rule == 'At the start only':
+            add_block(display_name, config.get('count', 0), sequence)
+        
+        # "At start + fixed interval" - add configurable start count
+        elif rule == 'At start + fixed interval':
+            start_count = config.get('start_count', config.get('count', 0))
+            add_block(display_name, start_count, sequence)
+        
+        # "At fixed interval" - add initial block at start
+        elif rule == 'At fixed interval':
+            add_block(display_name, config.get('count', 0), sequence)
     
-    # End-only items
-    for stype, config in [('Standard', standards), ('Blank', blanks), ('QC', qc)]:
+    # === MAIN SEQUENCE (in order) ===
+    sample_counter = 0
+    
+    # Find main sequence types (not start-only, not end-only, not interval-only)
+    main_types = []
+    for type_key in type_order:
+        config = type_configs.get(type_key, {})
+        if config.get('enabled'):
+            rule = config.get('rule', '')
+            # samples is always main, others only if they have interval-based rules
+            if type_key == 'samples' or rule not in ['At the start only', 'At the end only', 'At fixed interval', 'At start + fixed interval']:
+                main_types.append(type_key)
+    
+    # Process main sequence types
+    for type_key in main_types:
+        config = type_configs.get(type_key, {})
+        display_name = type_display.get(type_key, type_key.title())
+        item_count = config.get('count', 0)
+        
+        for i in range(1, item_count + 1):
+            sequence.append({'type': display_name, 'index': i})
+            sample_counter += 1
+            
+            # Add interval blocks after every N items (in order)
+            for interval_key in type_order:
+                if interval_key in interval_types:
+                    interval, count = interval_types[interval_key]
+                    if interval > 0 and sample_counter % interval == 0:
+                        add_block(type_display.get(interval_key, interval_key.title()), count, sequence)
+    
+    # === END ITEMS (in order) ===
+    for type_key in type_order:
+        config = type_configs.get(type_key, {})
+        display_name = type_display.get(type_key, type_key.title())
+        
         if config.get('enabled') and config.get('rule') == 'At the end only':
-            for i in range(config.get('count', 0)):
-                sequence.append({'type': stype, 'index': i + 1})
+            add_block(display_name, config.get('count', 0), sequence)
     
     return sequence
 

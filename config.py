@@ -24,7 +24,7 @@ PLATE_TYPES = {
 }
 
 # Sample placement rules
-FREQUENCY_RULES = ['At the start only', 'At the end only', 'At fixed interval']
+FREQUENCY_RULES = ['At the start only', 'At the end only', 'At fixed interval', 'At start + fixed interval']
 
 # Naming modes
 NAMING_MODES = ['None', 'Auto-build (Prefix + Index + Suffix)', 'Enter each name manually', 'Import from CSV/Excel']
