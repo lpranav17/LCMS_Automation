@@ -238,50 +238,23 @@ def render_step2_sample_config():
     
     if len(enabled_types) > 1:
         st.markdown("---")
-        st.markdown("**🔀 Sequence Order** *(drag to reorder)*")
         
-        # Custom CSS for sortable items to match dark theme
+        # Nice styled header for sequence order
         st.markdown("""
-        <style>
-        /* Sortable container */
-        [data-testid="stHorizontalBlock"] iframe,
-        .element-container iframe {
-            background: transparent !important;
-        }
-        
-        /* Target the sortables component wrapper */
-        div[data-testid="stVerticalBlock"] > div:has(iframe) {
-            background: #0f172a !important;
-            border-radius: 8px !important;
-            padding: 8px !important;
-        }
-        
-        /* Style for sortable items inside iframe - may need component-level styling */
-        .sortable-item, .sort-item, [draggable="true"] {
-            background: #1e293b !important;
-            border: 1px solid #334155 !important;
-            border-radius: 8px !important;
-            color: #e2e8f0 !important;
-            font-weight: 500 !important;
-            padding: 12px 20px !important;
-            margin: 4px !important;
-            cursor: grab !important;
-            transition: all 0.2s ease !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
-        }
-        .sortable-item:hover, .sort-item:hover, [draggable="true"]:hover {
-            border-color: #3b82f6 !important;
-            background: #334155 !important;
-            transform: translateY(-1px) !important;
-        }
-        .sortable-item:active, .sort-item:active, [draggable="true"]:active {
-            cursor: grabbing !important;
-        }
-        </style>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <span style="font-size: 1.1rem;">🔀</span>
+            <span style="font-weight: 600; color: #e2e8f0;">Sequence Order</span>
+            <span style="color: #64748b; font-size: 0.85rem; font-style: italic;">— drag to reorder</span>
+        </div>
         """, unsafe_allow_html=True)
         
-        # Map keys to display labels and back
-        key_to_label = {'standards': '📊 Standards', 'samples': '🧪 Samples', 'qc': '✓ QC', 'blanks': '○ Blanks'}
+        # Map keys to display labels with better icons
+        key_to_label = {
+            'standards': '📊 Standards', 
+            'samples': '🧪 Samples', 
+            'qc': '✅ QC', 
+            'blanks': '⬚ Blanks'
+        }
         label_to_key = {v: k for k, v in key_to_label.items()}
         
         # Get current order as labels (only enabled)
@@ -297,8 +270,9 @@ def render_step2_sample_config():
         disabled_types = [t for t in st.session_state.sample_type_order if not st.session_state.sample_types[t]['enabled']]
         st.session_state.sample_type_order = sorted_enabled + disabled_types
         
-        # Show order preview
-        st.caption(f"Order: {' → '.join([type_labels[t] for t in sorted_enabled])}")
+        # Show order preview with nicer styling
+        order_items = [f"**{type_labels[t]}**" for t in sorted_enabled]
+        st.markdown(f"<div style='background: #1e293b; border-radius: 8px; padding: 10px 16px; margin-top: 8px; border-left: 3px solid #3b82f6;'><span style='color: #94a3b8;'>Run order:</span> <span style='color: #e2e8f0;'>{' → '.join([type_labels[t] for t in sorted_enabled])}</span></div>", unsafe_allow_html=True)
     
     st.markdown("---")
     

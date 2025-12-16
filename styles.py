@@ -409,23 +409,31 @@ def get_dark_theme_css():
         
         /* Sortables/iframe containers - dark background */
         iframe {
-            background: #1e293b !important;
-            border-radius: 8px !important;
+            background: #0f172a !important;
+            border-radius: 12px !important;
             border: 1px solid #334155 !important;
         }
         
-        /* Container around iframes */
+        /* Container around iframes - sortables wrapper */
         .element-container:has(iframe) {
-            background: #1e293b !important;
-            border-radius: 8px !important;
-            padding: 8px !important;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+            border-radius: 12px !important;
+            padding: 12px !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
         }
         
         /* Streamlit sortables specific */
         [data-testid="stCustomComponentV1"] {
-            background: #1e293b !important;
-            border-radius: 8px !important;
-            padding: 4px !important;
+            background: transparent !important;
+            border-radius: 12px !important;
+            padding: 8px !important;
+        }
+        
+        /* Make sortable items inside iframe look better */
+        [data-testid="stCustomComponentV1"] iframe {
+            border: none !important;
+            background: transparent !important;
         }
     </style>
     """
