@@ -103,36 +103,27 @@ def get_dark_theme_css():
         [data-baseweb="menu"] li:hover { background: #334155 !important; }
         [data-baseweb="tag"] { background: #334155 !important; color: #e2e8f0 !important; }
         
-        /* Sidebar */
-        section[data-testid="stSidebar"] { background: #1e293b !important; }
+        /* Sidebar - always visible, cannot be collapsed */
+        section[data-testid="stSidebar"] { 
+            background: #1e293b !important;
+            transform: none !important;
+            min-width: 300px !important;
+        }
         section[data-testid="stSidebar"] > div { background: transparent !important; }
         section[data-testid="stSidebar"] * { color: #e2e8f0 !important; }
         
-        /* Sidebar collapse/expand button - always visible */
-        button[data-testid="collapsedControl"],
-        [data-testid="collapsedControl"] {
-            background: #3b82f6 !important;
-            border: none !important;
-            border-radius: 0 8px 8px 0 !important;
-            color: white !important;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4) !important;
-        }
-        button[data-testid="collapsedControl"]:hover,
-        [data-testid="collapsedControl"]:hover {
-            background: #2563eb !important;
-        }
-        button[data-testid="collapsedControl"] svg,
-        [data-testid="collapsedControl"] svg {
-            fill: white !important;
-            stroke: white !important;
+        /* Hide the sidebar close button so users can't collapse it */
+        section[data-testid="stSidebar"] button[data-testid="baseButton-headerNoPadding"],
+        button[data-testid="stSidebarCollapseButton"],
+        [data-testid="stSidebarCollapseButton"] {
+            display: none !important;
         }
         
-        /* Sidebar close button */
-        button[data-testid="baseButton-headerNoPadding"] {
-            color: #e2e8f0 !important;
-        }
-        button[data-testid="baseButton-headerNoPadding"]:hover {
-            background: #334155 !important;
+        /* Force sidebar to always be expanded */
+        section[data-testid="stSidebar"][aria-expanded="false"] {
+            transform: translateX(0) !important;
+            width: 300px !important;
+            min-width: 300px !important;
         }
         
         /* Expanders */

@@ -27,50 +27,6 @@ def main():
     # Apply dark theme CSS
     st.markdown(get_dark_theme_css(), unsafe_allow_html=True)
     
-    # Add floating sidebar toggle button (always visible)
-    st.markdown("""
-        <style>
-        /* Floating sidebar toggle button */
-        .sidebar-toggle-btn {
-            position: fixed;
-            top: 70px;
-            left: 10px;
-            z-index: 999999;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 14px;
-            cursor: pointer;
-            font-size: 18px;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            transition: all 0.2s ease;
-        }
-        .sidebar-toggle-btn:hover {
-            background: #2563eb;
-            transform: scale(1.05);
-        }
-        /* Hide when sidebar is open */
-        [data-testid="stSidebar"][aria-expanded="true"] ~ div .sidebar-toggle-btn {
-            display: none;
-        }
-        </style>
-        <button class="sidebar-toggle-btn" onclick="
-            const sidebar = window.parent.document.querySelector('[data-testid=stSidebar]');
-            const closeBtn = sidebar?.querySelector('button[data-testid=baseButton-headerNoPadding]');
-            if (sidebar) {
-                if (sidebar.getAttribute('aria-expanded') === 'false') {
-                    sidebar.setAttribute('aria-expanded', 'true');
-                    sidebar.style.display = 'block';
-                    sidebar.style.transform = 'translateX(0)';
-                }
-            }
-            // Try clicking Streamlit's native expand button if it exists
-            const expandBtn = window.parent.document.querySelector('[data-testid=collapsedControl]');
-            if (expandBtn) expandBtn.click();
-        ">☰ Menu</button>
-    """, unsafe_allow_html=True)
-    
     # Initialize session state
     init_session_state()
     
