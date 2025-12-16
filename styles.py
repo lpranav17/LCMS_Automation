@@ -407,34 +407,6 @@ def get_dark_theme_css():
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
         
-        /* Sortables/iframe containers - dark background */
-        iframe {
-            background: #0f172a !important;
-            border-radius: 12px !important;
-            border: 1px solid #334155 !important;
-        }
-        
-        /* Container around iframes - sortables wrapper */
-        .element-container:has(iframe) {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
-            border-radius: 12px !important;
-            padding: 12px !important;
-            border: 1px solid #334155 !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
-        }
-        
-        /* Streamlit sortables specific */
-        [data-testid="stCustomComponentV1"] {
-            background: transparent !important;
-            border-radius: 12px !important;
-            padding: 8px !important;
-        }
-        
-        /* Make sortable items inside iframe look better */
-        [data-testid="stCustomComponentV1"] iframe {
-            border: none !important;
-            background: transparent !important;
-        }
     </style>
     """
 
