@@ -239,8 +239,9 @@ def render_step2_sample_config():
     if len(enabled_types) > 1:
         st.markdown("---")
         st.markdown("**🔀 Sequence Order** *(drag to reorder)*")
+        st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)  # Spacer
         
-        # Simple text labels for better readability
+        # Simple text labels
         key_to_label = {
             'standards': 'Standards', 
             'samples': 'Samples', 
@@ -252,8 +253,11 @@ def render_step2_sample_config():
         # Get current order as labels
         current_labels = [key_to_label[k] for k in enabled_types]
         
-        # Drag and drop sortable
-        sorted_labels = sort_items(current_labels, direction="horizontal")
+        # Drag and drop sortable with container
+        with st.container():
+            sorted_labels = sort_items(current_labels, direction="horizontal")
+        
+        st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)  # Spacer
         
         # Convert back to keys
         sorted_enabled = [label_to_key[label] for label in sorted_labels]
@@ -263,7 +267,7 @@ def render_step2_sample_config():
         st.session_state.sample_type_order = sorted_enabled + disabled_types
         
         # Show order preview
-        st.info(f"**Run order:** {' → '.join(sorted_labels)}")
+        st.success(f"**Run order:** {' → '.join(sorted_labels)}")
     
     st.markdown("---")
     

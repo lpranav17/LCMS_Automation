@@ -407,18 +407,30 @@ def get_dark_theme_css():
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
         
-        /* Streamlit sortables - dark theme styling */
+        /* Streamlit sortables - fix overflow and sizing */
         [data-testid="stCustomComponentV1"] {
-            background: #1e293b !important;
-            border-radius: 12px !important;
-            padding: 8px 12px !important;
-            border: 1px solid #334155 !important;
+            background: transparent !important;
+            overflow: visible !important;
+            min-height: 70px !important;
         }
         
         [data-testid="stCustomComponentV1"] iframe {
             background: transparent !important;
             border: none !important;
-            min-height: 60px !important;
+            min-height: 70px !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+        
+        /* Fix element container overflow */
+        .element-container:has([data-testid="stCustomComponentV1"]) {
+            overflow: visible !important;
+            min-height: 70px !important;
+        }
+        
+        /* Ensure the sortables wrapper doesn't clip content */
+        .stCustomComponentV1, div:has(> iframe) {
+            overflow: visible !important;
         }
     </style>
     """
