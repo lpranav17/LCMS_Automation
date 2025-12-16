@@ -108,6 +108,33 @@ def get_dark_theme_css():
         section[data-testid="stSidebar"] > div { background: transparent !important; }
         section[data-testid="stSidebar"] * { color: #e2e8f0 !important; }
         
+        /* Sidebar collapse/expand button - always visible */
+        button[data-testid="collapsedControl"],
+        [data-testid="collapsedControl"] {
+            background: #3b82f6 !important;
+            border: none !important;
+            border-radius: 0 8px 8px 0 !important;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4) !important;
+        }
+        button[data-testid="collapsedControl"]:hover,
+        [data-testid="collapsedControl"]:hover {
+            background: #2563eb !important;
+        }
+        button[data-testid="collapsedControl"] svg,
+        [data-testid="collapsedControl"] svg {
+            fill: white !important;
+            stroke: white !important;
+        }
+        
+        /* Sidebar close button */
+        button[data-testid="baseButton-headerNoPadding"] {
+            color: #e2e8f0 !important;
+        }
+        button[data-testid="baseButton-headerNoPadding"]:hover {
+            background: #334155 !important;
+        }
+        
         /* Expanders */
         div[data-testid="stExpander"] {
             background: #1e293b !important;
