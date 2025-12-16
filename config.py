@@ -14,7 +14,7 @@ PAGE_CONFIG = {
 TEMPLATES_FILE = 'saved_templates.json'
 
 # Instrument options
-INSTRUMENTS = ['', 'Sciex7500', 'AgilentQQQ', 'HFX-2']
+INSTRUMENTS = ['Sciex7500', 'AgilentQQQ', 'HFX-2']
 
 # Plate types per instrument
 PLATE_TYPES = {

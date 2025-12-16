@@ -119,8 +119,9 @@ def get_dark_theme_css():
         div[data-testid="stExpander"] * { color: #e2e8f0 !important; }
         div[data-testid="stExpander"] > div:first-child { background: #1e293b !important; }
         
-        /* Buttons */
-        .stButton > button {
+        /* Buttons - All types */
+        .stButton > button,
+        [data-testid="baseButton-secondary"] {
             background: #334155 !important;
             border: 1px solid #475569 !important;
             border-radius: 8px !important;
@@ -128,12 +129,23 @@ def get_dark_theme_css():
             font-weight: 500 !important;
         }
         
-        .stButton > button:hover {
+        .stButton > button:hover,
+        [data-testid="baseButton-secondary"]:hover {
             background: #475569 !important;
             border-color: #3b82f6 !important;
         }
         
-        .stButton > button[kind="primary"] {
+        /* Disabled buttons */
+        .stButton > button:disabled,
+        [data-testid="baseButton-secondary"]:disabled {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            color: #64748b !important;
+            opacity: 0.6 !important;
+        }
+        
+        .stButton > button[kind="primary"],
+        [data-testid="baseButton-primary"] {
             background: #3b82f6 !important;
             border-color: #3b82f6 !important;
             color: #ffffff !important;
@@ -376,6 +388,27 @@ def get_dark_theme_css():
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        /* Sortables/iframe containers - dark background */
+        iframe {
+            background: #1e293b !important;
+            border-radius: 8px !important;
+            border: 1px solid #334155 !important;
+        }
+        
+        /* Container around iframes */
+        .element-container:has(iframe) {
+            background: #1e293b !important;
+            border-radius: 8px !important;
+            padding: 8px !important;
+        }
+        
+        /* Streamlit sortables specific */
+        [data-testid="stCustomComponentV1"] {
+            background: #1e293b !important;
+            border-radius: 8px !important;
+            padding: 4px !important;
+        }
     </style>
     """
 
