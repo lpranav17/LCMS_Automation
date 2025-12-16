@@ -407,6 +407,19 @@ def get_dark_theme_css():
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
         
+        /* Streamlit sortables - dark theme styling */
+        [data-testid="stCustomComponentV1"] {
+            background: #1e293b !important;
+            border-radius: 12px !important;
+            padding: 8px 12px !important;
+            border: 1px solid #334155 !important;
+        }
+        
+        [data-testid="stCustomComponentV1"] iframe {
+            background: transparent !important;
+            border: none !important;
+            min-height: 60px !important;
+        }
     </style>
     """
 

@@ -4,6 +4,7 @@ UI Components for MS Batch Generator
 
 import streamlit as st
 import pandas as pd
+from streamlit_sortables import sort_items
 
 from config import (
     INSTRUMENTS, FREQUENCY_RULES, NAMING_MODES, STEPS,
@@ -232,48 +233,37 @@ def render_step2_sample_config():
     with cols[3]:
         st.session_state.sample_types['blanks']['enabled'] = st.checkbox("Blanks", value=st.session_state.sample_types['blanks']['enabled'])
     
-    # === SEQUENCE ORDER ===
+    # === SEQUENCE ORDER (drag and drop) ===
     enabled_types = [t for t in st.session_state.sample_type_order if st.session_state.sample_types[t]['enabled']]
     
     if len(enabled_types) > 1:
         st.markdown("---")
-        st.markdown("**🔀 Sequence Order** — Set position for each type")
+        st.markdown("**🔀 Sequence Order** *(drag to reorder)*")
         
-        # Create columns for each enabled type
-        cols = st.columns(len(enabled_types))
-        new_order = {}
+        # Simple text labels for better readability
+        key_to_label = {
+            'standards': 'Standards', 
+            'samples': 'Samples', 
+            'qc': 'QC', 
+            'blanks': 'Blanks'
+        }
+        label_to_key = {v: k for k, v in key_to_label.items()}
         
-        for i, type_key in enumerate(enabled_types):
-            with cols[i]:
-                pos = st.selectbox(
-                    type_labels[type_key],
-                    options=list(range(1, len(enabled_types) + 1)),
-                    index=i,
-                    key=f"order_{type_key}"
-                )
-                new_order[type_key] = pos
+        # Get current order as labels
+        current_labels = [key_to_label[k] for k in enabled_types]
         
-        # Sort by position
-        sorted_enabled = sorted(new_order.keys(), key=lambda k: new_order[k])
+        # Drag and drop sortable
+        sorted_labels = sort_items(current_labels, direction="horizontal")
         
-        # Handle duplicate positions - keep original relative order
-        seen_pos = set()
-        final_order = []
-        for type_key in sorted_enabled:
-            if new_order[type_key] not in seen_pos:
-                seen_pos.add(new_order[type_key])
-                final_order.append(type_key)
-        # Add any remaining (duplicates)
-        for type_key in sorted_enabled:
-            if type_key not in final_order:
-                final_order.append(type_key)
+        # Convert back to keys
+        sorted_enabled = [label_to_key[label] for label in sorted_labels]
         
         # Update session state
         disabled_types = [t for t in st.session_state.sample_type_order if not st.session_state.sample_types[t]['enabled']]
-        st.session_state.sample_type_order = final_order + disabled_types
+        st.session_state.sample_type_order = sorted_enabled + disabled_types
         
         # Show order preview
-        st.info(f"**Run order:** {' → '.join([type_labels[t] for t in final_order])}")
+        st.info(f"**Run order:** {' → '.join(sorted_labels)}")
     
     st.markdown("---")
     
