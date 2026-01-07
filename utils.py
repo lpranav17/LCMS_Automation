@@ -238,15 +238,25 @@ def generate_sequence(sample_types, type_order=None):
 
 def generate_sample_name(item, naming_mode, sequence=None):
     """Generate a sample name based on the naming mode."""
-    type_name = item['type'].lower()
+    # Map display names back to internal keys for session_state lookup
+    display_to_key = {
+        'standard': 'standards',
+        'sample': 'samples',
+        'qc': 'qc',
+        'blank': 'blanks'
+    }
+    
+    display_type = item['type'].lower()
+    type_key = display_to_key.get(display_type, display_type)  # Use internal key
     idx = item['index']
     
     if naming_mode == 'None':
         return f"{item['type']}{idx}"
     elif naming_mode == 'Auto-build (Prefix + Index + Suffix)':
-        prefix = st.session_state.get(f"prefix_{type_name}", type_name[:3].upper())
-        suffix = st.session_state.get(f"suffix_{type_name}", "")
-        index_start = st.session_state.get(f"index_start_{type_name}", 1)
+        # Use internal key to look up prefix/suffix/index_start
+        prefix = st.session_state.get(f"prefix_{type_key}", display_type[:3].upper() if display_type != 'sample' else 'SPL')
+        suffix = st.session_state.get(f"suffix_{type_key}", "")
+        index_start = st.session_state.get(f"index_start_{type_key}", 1)
         
         if suffix:
             return f"{prefix}_{index_start + idx - 1}_{suffix}"
