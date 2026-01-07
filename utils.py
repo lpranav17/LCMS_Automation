@@ -21,7 +21,7 @@ def init_session_state():
         'project_name': '',
         'parent_folder': '',
         'sample_types': DEFAULT_SAMPLE_TYPES.copy(),
-        'sample_type_order': ['standards', 'samples', 'qc', 'blanks'],  # Default order
+        'sample_type_order': ['blanks', 'qc', 'standards', 'samples'],  # Default order
         'naming_mode': 'None',
         'naming_config': {},
         'sequence_df': None,
@@ -103,6 +103,10 @@ def generate_sequence(sample_types, type_order=None):
       Example with count=2, interval=5: S1-S5, QC1, QC2, S6-S10, QC1, QC2...
     - At start + fixed interval: Place items at START and after every N samples
       Example with count=2, interval=5: QC1, QC2, S1-S5, QC1, QC2, S6-S10, QC1, QC2...
+    - At start + at end: Place 'count' items at START and at END
+      Example with count=2: STD1, STD2, S1-S10, STD1, STD2
+    - At start + fixed interval + at end: Place items at START, after every N samples, and at END
+      Example with count=2, interval=5: QC1, QC2, S1-S5, QC1, QC2, S6-S10, QC1, QC2
     
     For interval rules, 'count' = how many items at EACH occurrence (repeating with reset indices)
     
@@ -133,7 +137,7 @@ def generate_sequence(sample_types, type_order=None):
     }
     
     def includes_interval(rule):
-        return rule in ['At fixed interval', 'At start + fixed interval']
+        return rule in ['At fixed interval', 'At start + fixed interval', 'At start + fixed interval + at end']
     
     # Helper to add a repeating block (indices reset: 1, 2, 3... each time)
     def add_block(stype, count, sequence):
@@ -166,6 +170,15 @@ def generate_sequence(sample_types, type_order=None):
         
         # "At start + fixed interval" - add configurable start count at start
         elif rule == 'At start + fixed interval':
+            start_count = config.get('start_count', config.get('count', 0))
+            add_block(display_name, start_count, sequence)
+        
+        # "At start + at end" - add full count at start (end handled separately)
+        elif rule == 'At start + at end':
+            add_block(display_name, config.get('count', 0), sequence)
+        
+        # "At start + fixed interval + at end" - add configurable start count at start (intervals and end handled separately)
+        elif rule == 'At start + fixed interval + at end':
             start_count = config.get('start_count', config.get('count', 0))
             add_block(display_name, start_count, sequence)
         
@@ -203,7 +216,21 @@ def generate_sequence(sample_types, type_order=None):
         config = type_configs.get(type_key, {})
         display_name = type_display.get(type_key, type_key.title())
         
-        if config.get('enabled') and config.get('rule') == 'At the end only':
+        if not config.get('enabled'):
+            continue
+        
+        rule = config.get('rule', '')
+        
+        # "At the end only" - add full count at end
+        if rule == 'At the end only':
+            add_block(display_name, config.get('count', 0), sequence)
+        
+        # "At start + at end" - add full count at end
+        elif rule == 'At start + at end':
+            add_block(display_name, config.get('count', 0), sequence)
+        
+        # "At start + fixed interval + at end" - add full count at end
+        elif rule == 'At start + fixed interval + at end':
             add_block(display_name, config.get('count', 0), sequence)
     
     return sequence

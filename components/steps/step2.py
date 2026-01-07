@@ -14,7 +14,7 @@ def render_step2_sample_config():
     
     # Initialize order if not present
     if 'sample_type_order' not in st.session_state:
-        st.session_state.sample_type_order = ['standards', 'samples', 'qc', 'blanks']
+        st.session_state.sample_type_order = ['blanks', 'qc', 'standards', 'samples']
     
     type_labels = {'standards': 'Standards', 'samples': 'Samples', 'qc': 'QC', 'blanks': 'Blanks'}
     
@@ -89,12 +89,12 @@ def render_step2_sample_config():
                 st.session_state.sample_types[type_name]['rule'] = rule
             with c3:
                 current_rule = st.session_state.sample_types[type_name].get('rule', '')
-                if current_rule in ['At fixed interval', 'At start + fixed interval']:
+                if current_rule in ['At fixed interval', 'At start + fixed interval', 'At start + fixed interval + at end']:
                     interval = st.number_input("Every N samples", min_value=1, max_value=100, value=config.get('interval', 5), key=f"interval_{type_name}")
                     st.session_state.sample_types[type_name]['interval'] = interval
             
-            # Start count for "At start + fixed interval"
-            if current_rule == 'At start + fixed interval' and count > 0:
+            # Start count for "At start + fixed interval" and "At start + fixed interval + at end"
+            if current_rule in ['At start + fixed interval', 'At start + fixed interval + at end'] and count > 0:
                 max_start = max(1, count)
                 current_start = min(config.get('start_count', count), max_start)
                 start_count = st.number_input("How many at start?", min_value=1, max_value=max_start, value=current_start, key=f"start_count_{type_name}")
