@@ -61,3 +61,4 @@ def render_sciex7500_config(sequence):
     edited_df = render_editable_table(df, key_prefix='sciex', height=400)
     st.session_state.sequence_df = edited_df
     return edited_df
+

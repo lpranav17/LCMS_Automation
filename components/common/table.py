@@ -55,3 +55,4 @@ def render_editable_table(df, key_prefix, column_config=None, height=400):
     st.session_state[df_key] = edited_df.reset_index(drop=True)
     
     return edited_df
+

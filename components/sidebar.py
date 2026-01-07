@@ -78,3 +78,4 @@ def render_footer():
             Supports Sciex7500 · AgilentQQQ · HFX-2
         </div>
     """, unsafe_allow_html=True)
+

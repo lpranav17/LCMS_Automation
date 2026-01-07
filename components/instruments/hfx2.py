@@ -88,3 +88,4 @@ def render_hfx2_config(sequence):
     full_df = pd.DataFrame(full_data)
     st.session_state.sequence_df = full_df
     return full_df
+
