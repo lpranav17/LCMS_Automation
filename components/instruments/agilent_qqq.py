@@ -45,6 +45,12 @@ def render_agilent_config(sequence):
         st.session_state['agilent_seq_hash'] = seq_hash
         st.session_state['agilent_needs_reset'] = True
     
+    # Check if config values changed (method, parent folder) - reset stored DataFrame
+    config_hash = hash((ms_method, st.session_state.parent_folder))
+    if st.session_state.get('agilent_config_hash') != config_hash:
+        st.session_state['agilent_config_hash'] = config_hash
+        st.session_state['agilent_needs_reset'] = True
+    
     st.caption("💡 **Double-click** cells to edit")
     
     edited_df = render_editable_table(df, key_prefix='agilent', height=400)

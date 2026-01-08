@@ -53,6 +53,12 @@ def render_hfx2_config(sequence):
         st.session_state['hfx_seq_hash'] = seq_hash
         st.session_state['hfx_needs_reset'] = True
     
+    # Check if config values changed (method, injection volume, parent folder) - reset stored DataFrame
+    config_hash = hash((ms_method, injection_volume, st.session_state.parent_folder))
+    if st.session_state.get('hfx_config_hash') != config_hash:
+        st.session_state['hfx_config_hash'] = config_hash
+        st.session_state['hfx_needs_reset'] = True
+    
     st.caption("💡 **Double-click** cells to edit")
     
     edited_df = render_editable_table(df, key_prefix='hfx', height=400)

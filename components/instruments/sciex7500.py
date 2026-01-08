@@ -56,6 +56,12 @@ def render_sciex7500_config(sequence):
         st.session_state['sciex_seq_hash'] = seq_hash
         st.session_state['sciex_needs_reset'] = True
     
+    # Check if config values changed (methods, injection volume, plate settings) - reset stored DataFrame
+    config_hash = hash((ms_method, lc_method, injection_volume, plate_type, plate_number, st.session_state.parent_folder))
+    if st.session_state.get('sciex_config_hash') != config_hash:
+        st.session_state['sciex_config_hash'] = config_hash
+        st.session_state['sciex_needs_reset'] = True
+    
     st.caption("💡 **Double-click** cells to edit")
     
     edited_df = render_editable_table(df, key_prefix='sciex', height=400)
