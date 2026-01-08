@@ -12,9 +12,15 @@ def render_step2_sample_config():
     """Render Step 2: Sample Types Configuration."""
     st.subheader("🧫 Step 2: Sample Configuration")
     
-    # Initialize order if not present
+    # Initialize order if not present, or migrate old order to new default
     if 'sample_type_order' not in st.session_state:
         st.session_state.sample_type_order = ['blanks', 'qc', 'standards', 'samples']
+    else:
+        # Migrate old default order to new default order
+        old_default = ['standards', 'samples', 'qc', 'blanks']
+        current_order = st.session_state.sample_type_order
+        if current_order == old_default:
+            st.session_state.sample_type_order = ['blanks', 'qc', 'standards', 'samples']
     
     type_labels = {'standards': 'Standards', 'samples': 'Samples', 'qc': 'QC', 'blanks': 'Blanks'}
     

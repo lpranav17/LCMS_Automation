@@ -24,21 +24,16 @@ def render_step3_naming_rules():
                     with cols[0]:
                         default_prefix = type_name[:3].upper() if type_name != 'samples' else 'SPL'
                         prefix = st.text_input("Prefix", value=st.session_state.get(f"prefix_{type_name}", default_prefix), key=f"prefix_{type_name}", help="e.g., STD, SPL, QC, BLK")
-                        # Update session state immediately
-                        st.session_state[f"prefix_{type_name}"] = prefix
                     with cols[1]:
                         index_start = st.number_input("Start Index", min_value=1, value=st.session_state.get(f"index_start_{type_name}", 1), key=f"index_start_{type_name}", help="Starting number for samples")
-                        # Update session state immediately
-                        st.session_state[f"index_start_{type_name}"] = index_start
                     with cols[2]:
                         suffix = st.text_input("Suffix (optional)", value=st.session_state.get(f"suffix_{type_name}", ""), key=f"suffix_{type_name}", placeholder="e.g., uM, dil, prep1", help="e.g., 10uM, dil2, batch1")
-                        # Update session state immediately
-                        st.session_state[f"suffix_{type_name}"] = suffix
                     
-                    # Show preview using current values (updates on the fly)
-                    prefix_val = prefix if prefix else default_prefix
-                    idx_val = index_start
-                    suffix_val = suffix
+                    # Show preview using current values from session_state (updates on the fly)
+                    # Streamlit widgets with key= automatically update session_state
+                    prefix_val = st.session_state.get(f"prefix_{type_name}", default_prefix)
+                    idx_val = st.session_state.get(f"index_start_{type_name}", 1)
+                    suffix_val = st.session_state.get(f"suffix_{type_name}", "")
                     preview = f"{prefix_val}_{idx_val}_{suffix_val}" if suffix_val else f"{prefix_val}_{idx_val}"
                     st.markdown(f'<div class="code-preview">Preview: {preview}, {prefix_val}_{idx_val+1}{"_"+suffix_val if suffix_val else ""}, ...</div>', unsafe_allow_html=True)
     

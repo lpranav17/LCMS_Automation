@@ -38,6 +38,12 @@ def init_session_state():
                 st.session_state[key] = value.copy()
             else:
                 st.session_state[key] = value
+    
+    # Migrate old default order to new default order if needed
+    if 'sample_type_order' in st.session_state:
+        old_default = ['standards', 'samples', 'qc', 'blanks']
+        if st.session_state.sample_type_order == old_default:
+            st.session_state.sample_type_order = ['blanks', 'qc', 'standards', 'samples']
 
 
 def reset_session_state():
