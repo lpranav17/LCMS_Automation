@@ -57,10 +57,8 @@ def render_step4_instrument_config():
                 initial_finish_time = datetime.now() + timedelta(minutes=total_runtime_minutes)
                 initial_finish_str = initial_finish_time.strftime("%H:%M:%S")
                 
-                # Create a real-time updating finish time display
-                st.markdown("**Estimated Time to Finish**")
-                
-                # Use components.html with full HTML structure for reliable script execution
+                # Create a metric-like display that matches st.metric() styling exactly
+                # Match Streamlit's metric styling: label in #94a3b8, value in #3b82f6
                 finish_time_html = f"""
                 <!DOCTYPE html>
                 <html>
@@ -70,24 +68,40 @@ def render_step4_instrument_config():
                         body {{
                             margin: 0;
                             padding: 0;
-                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                            background: transparent;
                         }}
-                        #finish-time {{
+                        .metric-container {{
+                            padding: 1rem 0;
+                        }}
+                        .metric-label {{
+                            font-size: 0.875rem;
+                            color: #94a3b8;
+                            font-weight: 400;
+                            margin-bottom: 0.25rem;
+                            line-height: 1.4;
+                        }}
+                        .metric-value {{
                             font-size: 2rem;
-                            font-weight: bold;
-                            color: #1f77b4;
-                            padding: 0.5rem 0;
-                            text-align: center;
+                            font-weight: 600;
+                            color: #3b82f6;
+                            line-height: 1.2;
                         }}
                     </style>
                 </head>
                 <body>
-                    <div id="finish-time">{initial_finish_str}</div>
+                    <div class="metric-container">
+                        <div class="metric-label">Estimated Time to Finish</div>
+                        <div class="metric-value" id="finish-time-value">{initial_finish_str}</div>
+                    </div>
                     <script>
                         (function() {{
                             const runtimeMinutes = {total_runtime_minutes};
                             
                             function updateFinishTime() {{
+                                const element = document.getElementById('finish-time-value');
+                                if (!element) return;
+                                
                                 const now = new Date();
                                 const finishTime = new Date(now.getTime() + runtimeMinutes * 60 * 1000);
                                 
@@ -95,10 +109,7 @@ def render_step4_instrument_config():
                                 const minutes = String(finishTime.getMinutes()).padStart(2, '0');
                                 const seconds = String(finishTime.getSeconds()).padStart(2, '0');
                                 
-                                const element = document.getElementById('finish-time');
-                                if (element) {{
-                                    element.textContent = hours + ':' + minutes + ':' + seconds;
-                                }}
+                                element.textContent = hours + ':' + minutes + ':' + seconds;
                             }}
                             
                             // Update immediately and then every second
@@ -109,7 +120,7 @@ def render_step4_instrument_config():
                 </body>
                 </html>
                 """
-                components.html(finish_time_html, height=70)
+                components.html(finish_time_html, height=90)
         
         st.info("ℹ️ **Note:** Assumes 1 minute handover time between injections. Total time = (Method Runtime + 1 min) × Number of Samples")
     
