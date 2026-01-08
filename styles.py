@@ -133,9 +133,28 @@ def get_dark_theme_css():
             border-radius: 8px !important;
         }
         
-        div[data-testid="stExpander"] summary,
+        /* Expander header - make it more readable */
+        div[data-testid="stExpander"] summary {
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            padding: 0.75rem 1rem !important;
+        }
+        
+        div[data-testid="stExpander"] summary:hover {
+            color: #60a5fa !important;
+        }
+        
         div[data-testid="stExpander"] * { color: #e2e8f0 !important; }
-        div[data-testid="stExpander"] > div:first-child { background: #1e293b !important; }
+        div[data-testid="stExpander"] > div:first-child { 
+            background: #1e293b !important; 
+        }
+        
+        /* Expander header background for better contrast */
+        div[data-testid="stExpander"] summary {
+            background: rgba(59, 130, 246, 0.1) !important;
+            border-bottom: 1px solid #334155 !important;
+        }
         
         /* Buttons - All types */
         .stButton > button,
