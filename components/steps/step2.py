@@ -54,7 +54,11 @@ def render_step2_sample_config():
     
     if len(enabled_types) > 1:
         st.markdown("---")
-        st.markdown("**🔀 Sequence Order** *(drag to reorder)*")
+        st.markdown("""
+            <div style="color: #ffffff; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">
+                🔀 <strong>Sequence Order</strong> <em style="color: #94a3b8; font-weight: 400;">(drag to reorder)</em>
+            </div>
+        """, unsafe_allow_html=True)
         st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)  # Spacer
         
         # Simple text labels
@@ -69,9 +73,16 @@ def render_step2_sample_config():
         # Get current order as labels
         current_labels = [key_to_label[k] for k in enabled_types]
         
+        # Drag and drop sortable with container - add custom styling wrapper
+        st.markdown("""
+            <div style="background: #1e293b; border: 2px solid #3b82f6; border-radius: 8px; padding: 1rem; margin: 0.5rem 0;">
+        """, unsafe_allow_html=True)
+        
         # Drag and drop sortable with container
         with st.container():
             sorted_labels = sort_items(current_labels, direction="horizontal")
+        
+        st.markdown("</div>", unsafe_allow_html=True)
         
         st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)  # Spacer
         

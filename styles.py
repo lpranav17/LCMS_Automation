@@ -444,7 +444,7 @@ def get_dark_theme_css():
             overflow: visible !important;
         }
         
-        /* Fix element container overflow */
+        /* Fix element container overflow - remove white background */
         .element-container:has([data-testid="stCustomComponentV1"]) {
             overflow: visible !important;
             min-height: 70px !important;
@@ -453,9 +453,27 @@ def get_dark_theme_css():
             padding: 0.5rem !important;
         }
         
+        /* Target the container div that wraps the sortable */
+        div:has([data-testid="stCustomComponentV1"]) {
+            background: #1e293b !important;
+        }
+        
         /* Ensure the sortables wrapper doesn't clip content */
         .stCustomComponentV1, div:has(> iframe) {
             overflow: visible !important;
+            background: #1e293b !important;
+        }
+        
+        /* Override any white backgrounds in the sortable area */
+        .stContainer:has([data-testid="stCustomComponentV1"]),
+        div[data-testid="element-container"]:has([data-testid="stCustomComponentV1"]) {
+            background: #1e293b !important;
+        }
+        
+        /* Target iframe body inside sortables */
+        [data-testid="stCustomComponentV1"] iframe body,
+        [data-testid="stCustomComponentV1"] iframe html {
+            background: #1e293b !important;
         }
         
         /* Style the sortable items (buttons) for better readability */
@@ -473,6 +491,35 @@ def get_dark_theme_css():
         [data-testid="stCustomComponentV1"] .sortable-item:hover {
             background: #2563eb !important;
             border-color: #93c5fd !important;
+        }
+        
+        /* Additional override for any white backgrounds */
+        [data-testid="stCustomComponentV1"],
+        [data-testid="stCustomComponentV1"] *,
+        [data-testid="stCustomComponentV1"] iframe,
+        [data-testid="stCustomComponentV1"] iframe *,
+        .element-container:has([data-testid="stCustomComponentV1"]),
+        .element-container:has([data-testid="stCustomComponentV1"]) *,
+        div:has([data-testid="stCustomComponentV1"]),
+        div:has([data-testid="stCustomComponentV1"]) * {
+            background-color: #1e293b !important;
+            background: #1e293b !important;
+        }
+        
+        /* Override white backgrounds in sortable container */
+        .stContainer,
+        .stContainer > div,
+        div[class*="container"]:has([data-testid="stCustomComponentV1"]),
+        /* Target all possible wrapper divs */
+        div[data-baseweb="base-provider"],
+        div[data-baseweb="base-provider"] > div {
+            background: #1e293b !important;
+            background-color: #1e293b !important;
+        }
+        
+        /* Force dark background on any element containing the sortable */
+        *:has([data-testid="stCustomComponentV1"]) {
+            background: #1e293b !important;
         }
     </style>
     """
