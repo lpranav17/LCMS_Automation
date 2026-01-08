@@ -3,7 +3,8 @@ Step 4: Instrument Configuration
 """
 
 import streamlit as st
-from utils import generate_sequence
+from datetime import datetime, timedelta
+from utils import generate_sequence, calculate_sequence_runtime, format_runtime
 from components.instruments import render_sciex7500_config, render_agilent_config, render_hfx2_config
 
 
@@ -13,6 +14,20 @@ def render_step4_instrument_config():
     
     sequence = generate_sequence(st.session_state.sample_types, st.session_state.get('sample_type_order'))
     
+    # Method runtime input (common for all instruments)
+    st.markdown("**Method Runtime**")
+    method_runtime = st.number_input(
+        "Method Runtime (minutes)",
+        min_value=0.0,
+        max_value=1000.0,
+        value=st.session_state.get('method_runtime', 0.0),
+        step=0.1,
+        help="Enter the runtime of your method per injection in minutes"
+    )
+    st.session_state.method_runtime = method_runtime
+    
+    st.markdown("---")
+    
     if st.session_state.instrument == 'Sciex7500':
         df = render_sciex7500_config(sequence)
     elif st.session_state.instrument == 'AgilentQQQ':
@@ -21,6 +36,26 @@ def render_step4_instrument_config():
         df = render_hfx2_config(sequence)
     else:
         df = None
+    
+    # Display runtime estimates if we have a sequence and method runtime
+    if df is not None and len(sequence) > 0 and method_runtime > 0:
+        st.markdown("---")
+        st.markdown("**⏱️ Runtime Estimates**")
+        
+        sequence_length = len(sequence)
+        total_runtime_minutes = calculate_sequence_runtime(sequence_length, method_runtime, handover_minutes=1.0)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Estimated Sequence Run Time", format_runtime(total_runtime_minutes))
+        
+        with col2:
+            if total_runtime_minutes > 0:
+                finish_time = datetime.now() + timedelta(minutes=total_runtime_minutes)
+                finish_time_str = finish_time.strftime("%H:%M:%S")
+                st.metric("Estimated Time to Finish", finish_time_str)
+        
+        st.info("ℹ️ **Note:** Assumes 1 minute handover time between injections. Total time = (Method Runtime + 1 min) × Number of Samples")
     
     col1, col2 = st.columns(2)
     with col1:

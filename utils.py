@@ -31,6 +31,7 @@ def init_session_state():
         'plate_type': '1.5mL VT54 (54 vial)',
         'plate_number': 1,
         'injection_volume': 1.0,
+        'method_runtime': 0.0,  # Method runtime in minutes
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -275,4 +276,43 @@ def generate_sample_name(item, naming_mode, sequence=None):
                 return names[total_idx]
     
     return f"{item['type']}{idx}"
+
+
+# ============================================================================
+# RUNTIME CALCULATION
+# ============================================================================
+
+def calculate_sequence_runtime(sequence_length, method_runtime_minutes, handover_minutes=1.0):
+    """
+    Calculate estimated sequence runtime.
+    
+    Args:
+        sequence_length: Number of samples in sequence
+        method_runtime_minutes: Runtime of the method per injection (minutes)
+        handover_minutes: Time between injections (default: 1.0 minute)
+    
+    Returns:
+        Total runtime in minutes
+    """
+    if sequence_length == 0 or method_runtime_minutes <= 0:
+        return 0.0
+    
+    # Total time = (method runtime + handover) * number of samples
+    # Note: handover is between injections, so for N samples we have N-1 handovers
+    # But typically we add handover for each sample to be safe
+    total_minutes = (method_runtime_minutes + handover_minutes) * sequence_length
+    
+    return total_minutes
+
+
+def format_runtime(minutes):
+    """Format minutes into a human-readable string."""
+    if minutes < 60:
+        return f"{minutes:.1f} minutes"
+    else:
+        hours = int(minutes // 60)
+        mins = int(minutes % 60)
+        if mins == 0:
+            return f"{hours} hour{'s' if hours > 1 else ''}"
+        return f"{hours} hour{'s' if hours > 1 else ''} {mins} minute{'s' if mins > 1 else ''}"
 
