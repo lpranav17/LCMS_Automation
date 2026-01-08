@@ -428,13 +428,16 @@ def get_dark_theme_css():
         
         /* Streamlit sortables - fix overflow and sizing */
         [data-testid="stCustomComponentV1"] {
-            background: transparent !important;
+            background: #1e293b !important;
+            border: 2px solid #3b82f6 !important;
+            border-radius: 8px !important;
             overflow: visible !important;
             min-height: 70px !important;
+            padding: 1rem !important;
         }
         
         [data-testid="stCustomComponentV1"] iframe {
-            background: transparent !important;
+            background: #1e293b !important;
             border: none !important;
             min-height: 70px !important;
             height: auto !important;
@@ -445,11 +448,31 @@ def get_dark_theme_css():
         .element-container:has([data-testid="stCustomComponentV1"]) {
             overflow: visible !important;
             min-height: 70px !important;
+            background: #1e293b !important;
+            border-radius: 8px !important;
+            padding: 0.5rem !important;
         }
         
         /* Ensure the sortables wrapper doesn't clip content */
         .stCustomComponentV1, div:has(> iframe) {
             overflow: visible !important;
+        }
+        
+        /* Style the sortable items (buttons) for better readability */
+        [data-testid="stCustomComponentV1"] button,
+        [data-testid="stCustomComponentV1"] .sortable-item {
+            background: #3b82f6 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            border: 1px solid #60a5fa !important;
+            border-radius: 6px !important;
+            padding: 0.5rem 1rem !important;
+        }
+        
+        [data-testid="stCustomComponentV1"] button:hover,
+        [data-testid="stCustomComponentV1"] .sortable-item:hover {
+            background: #2563eb !important;
+            border-color: #93c5fd !important;
         }
     </style>
     """

@@ -37,7 +37,20 @@ def render_step2_sample_config():
         st.session_state.sample_types['blanks']['enabled'] = st.checkbox("Blanks", value=st.session_state.sample_types['blanks']['enabled'])
     
     # === SEQUENCE ORDER (drag and drop) ===
-    enabled_types = [t for t in st.session_state.sample_type_order if st.session_state.sample_types[t]['enabled']]
+    # Set default order when all types are enabled
+    all_types = ['blanks', 'qc', 'standards', 'samples']
+    all_enabled = all(st.session_state.sample_types[t]['enabled'] for t in all_types)
+    
+    if all_enabled:
+        # When all types are enabled, ensure default order is set
+        # Only reset if the enabled types don't match the default order
+        enabled_types = [t for t in st.session_state.sample_type_order if st.session_state.sample_types[t]['enabled']]
+        if set(enabled_types) == set(all_types) and enabled_types != all_types:
+            # Reset to default order: blanks, QC, standards, samples
+            st.session_state.sample_type_order = all_types.copy()
+            enabled_types = all_types.copy()
+    else:
+        enabled_types = [t for t in st.session_state.sample_type_order if st.session_state.sample_types[t]['enabled']]
     
     if len(enabled_types) > 1:
         st.markdown("---")
