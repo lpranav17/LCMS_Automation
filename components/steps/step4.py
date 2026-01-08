@@ -3,6 +3,7 @@ Step 4: Instrument Configuration
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 from datetime import datetime, timedelta
 from utils import generate_sequence, calculate_sequence_runtime, format_runtime
 from components.instruments import render_sciex7500_config, render_agilent_config, render_hfx2_config
@@ -22,6 +23,7 @@ def render_step4_instrument_config():
         max_value=1000.0,
         value=st.session_state.get('method_runtime', 0.0),
         step=0.1,
+        key='method_runtime_input',
         help="Enter the runtime of your method per injection in minutes"
     )
     st.session_state.method_runtime = method_runtime
@@ -51,36 +53,63 @@ def render_step4_instrument_config():
         
         with col2:
             if total_runtime_minutes > 0:
+                # Calculate initial finish time for display
+                initial_finish_time = datetime.now() + timedelta(minutes=total_runtime_minutes)
+                initial_finish_str = initial_finish_time.strftime("%H:%M:%S")
+                
                 # Create a real-time updating finish time display
                 st.markdown("**Estimated Time to Finish**")
-                finish_time_container = st.empty()
                 
-                # JavaScript to recalculate finish time in real-time based on current time + runtime
+                # Use components.html with full HTML structure for reliable script execution
                 finish_time_html = f"""
-                <div id="finish-time-display" style="font-size: 2rem; font-weight: bold; color: #1f77b4; padding: 0.5rem 0;">
-                    <span id="finish-time-value">--:--:--</span>
-                </div>
-                <script>
-                    (function() {{
-                        const runtimeMinutes = {total_runtime_minutes};
-                        
-                        function updateFinishTime() {{
-                            const now = new Date();
-                            const finishTime = new Date(now.getTime() + runtimeMinutes * 60 * 1000);
-                            
-                            const hours = String(finishTime.getHours()).padStart(2, '0');
-                            const minutes = String(finishTime.getMinutes()).padStart(2, '0');
-                            const seconds = String(finishTime.getSeconds()).padStart(2, '0');
-                            document.getElementById('finish-time-value').textContent = hours + ':' + minutes + ':' + seconds;
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body {{
+                            margin: 0;
+                            padding: 0;
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                         }}
-                        
-                        // Update immediately and then every second
-                        updateFinishTime();
-                        setInterval(updateFinishTime, 1000);
-                    }})();
-                </script>
+                        #finish-time {{
+                            font-size: 2rem;
+                            font-weight: bold;
+                            color: #1f77b4;
+                            padding: 0.5rem 0;
+                            text-align: center;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div id="finish-time">{initial_finish_str}</div>
+                    <script>
+                        (function() {{
+                            const runtimeMinutes = {total_runtime_minutes};
+                            
+                            function updateFinishTime() {{
+                                const now = new Date();
+                                const finishTime = new Date(now.getTime() + runtimeMinutes * 60 * 1000);
+                                
+                                const hours = String(finishTime.getHours()).padStart(2, '0');
+                                const minutes = String(finishTime.getMinutes()).padStart(2, '0');
+                                const seconds = String(finishTime.getSeconds()).padStart(2, '0');
+                                
+                                const element = document.getElementById('finish-time');
+                                if (element) {{
+                                    element.textContent = hours + ':' + minutes + ':' + seconds;
+                                }}
+                            }}
+                            
+                            // Update immediately and then every second
+                            updateFinishTime();
+                            setInterval(updateFinishTime, 1000);
+                        }})();
+                    </script>
+                </body>
+                </html>
                 """
-                finish_time_container.markdown(finish_time_html, unsafe_allow_html=True)
+                components.html(finish_time_html, height=70)
         
         st.info("ℹ️ **Note:** Assumes 1 minute handover time between injections. Total time = (Method Runtime + 1 min) × Number of Samples")
     
