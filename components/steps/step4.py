@@ -51,9 +51,36 @@ def render_step4_instrument_config():
         
         with col2:
             if total_runtime_minutes > 0:
-                finish_time = datetime.now() + timedelta(minutes=total_runtime_minutes)
-                finish_time_str = finish_time.strftime("%H:%M:%S")
-                st.metric("Estimated Time to Finish", finish_time_str)
+                # Create a real-time updating finish time display
+                st.markdown("**Estimated Time to Finish**")
+                finish_time_container = st.empty()
+                
+                # JavaScript to recalculate finish time in real-time based on current time + runtime
+                finish_time_html = f"""
+                <div id="finish-time-display" style="font-size: 2rem; font-weight: bold; color: #1f77b4; padding: 0.5rem 0;">
+                    <span id="finish-time-value">--:--:--</span>
+                </div>
+                <script>
+                    (function() {{
+                        const runtimeMinutes = {total_runtime_minutes};
+                        
+                        function updateFinishTime() {{
+                            const now = new Date();
+                            const finishTime = new Date(now.getTime() + runtimeMinutes * 60 * 1000);
+                            
+                            const hours = String(finishTime.getHours()).padStart(2, '0');
+                            const minutes = String(finishTime.getMinutes()).padStart(2, '0');
+                            const seconds = String(finishTime.getSeconds()).padStart(2, '0');
+                            document.getElementById('finish-time-value').textContent = hours + ':' + minutes + ':' + seconds;
+                        }}
+                        
+                        // Update immediately and then every second
+                        updateFinishTime();
+                        setInterval(updateFinishTime, 1000);
+                    }})();
+                </script>
+                """
+                finish_time_container.markdown(finish_time_html, unsafe_allow_html=True)
         
         st.info("ℹ️ **Note:** Assumes 1 minute handover time between injections. Total time = (Method Runtime + 1 min) × Number of Samples")
     
